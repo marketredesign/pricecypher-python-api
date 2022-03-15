@@ -1,7 +1,7 @@
 import json
 import requests
 
-from exceptions import PriceCypherError, RateLimitError
+from .exceptions import PriceCypherError, RateLimitError
 from time import sleep
 from random import randint
 
