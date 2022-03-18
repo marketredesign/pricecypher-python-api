@@ -1,5 +1,6 @@
 import json
 import requests
+from marshmallow import Schema
 
 from .exceptions import PriceCypherError, RateLimitError
 from time import sleep
@@ -9,18 +10,19 @@ UNKNOWN_ERROR = 'pricecypher.sdk.internal.unknown'
 
 
 class RestClientOptions(object):
-    """Configuration object for RestClient. Used for configuring additional RestClient options,
-        such as rate-limit retries.
+    """Configuration object for RestClient.
 
-    Args:
-        timeout (float or tuple, optional): Change the requests connect and read timeout (in seconds). Pass a tuple to
-            specify both values separately or a float to set both to it.
-            (defaults to 300.0 (5 minutes) for both)
-        retries (integer): In the event an API request returns a 429 response header (indicating rate-limit has been
-            hit), the RestClient will retry the request this many times using an exponential backoff strategy, before
-            raising a RateLimitError exception.
-            (defaults to 3)
+    Used for configuring additional RestClient options, such as rate-limit retries.
+
+    :param float or tuple[float,float] timeout: (optional) Change the requests connect and read timeout (in seconds).
+        Pass a tuple to specify both values separately or a float to set both to it.
+        (defaults to 300.0 (5 minutes) for both)
+    :param int retries: (optional) In the event an API request returns a 429 response header (indicating rate-limit
+        has been hit), the RestClient will retry the request this many times using an exponential backoff strategy,
+        before raising a RateLimitError exception.
+        (defaults to 3)
     """
+
     def __init__(self, timeout=None, retries=None):
         self.timeout = 300.0
         self.retries = 3
@@ -35,10 +37,9 @@ class RestClientOptions(object):
 class RestClient(object):
     """Provides simple methods for handling all RESTful api endpoints.
 
-    Args:
-        jwt (string): JWT token used to authorize requests to the APIs.
-        options (RestClientOptions, optional): Pass an instance of RestClientOptions to configure additional RestClient
-            options, such as rate-limit retries.
+    :param str jwt: JWT token used to authorize requests to the APIs.
+    :param RestClientOptions options: (optional) Pass an instance of RestClientOptions to configure additional
+        RestClient options, such as rate-limit retries.
     """
 
     def __init__(self, jwt, options=None):
@@ -119,24 +120,24 @@ class RestClient(object):
         # Return the final Response
         return response
 
-    def get(self, url, params=None):
+    def get(self, url, params=None, schema: Schema = None):
         headers = self.base_headers.copy()
-
         response = self._retry(lambda: requests.get(url, params=params, headers=headers, timeout=self.options.timeout))
 
-        return self._process_response(response)
+        return self._process_response(response, schema)
 
-    def post(self, url, data=None):
+    def post(self, url, data=None, schema: Schema = None):
         headers = self.base_headers.copy()
 
         response = self._retry(lambda: requests.post(url, json=data, headers=headers, timeout=self.options.timeout))
-        return self._process_response(response)
+        return self._process_response(response, schema)
 
     def file_post(self, url, data=None, files=None):
         headers = self.base_headers.copy()
         headers.pop('Content-Type', None)
 
-        response = self._retry(lambda: requests.post(url, data=data, files=files, headers=headers, timeout=self.options.timeout))
+        response = self._retry(
+            lambda: requests.post(url, data=data, files=files, headers=headers, timeout=self.options.timeout))
         return self._process_response(response)
 
     def patch(self, url, data=None):
@@ -154,17 +155,18 @@ class RestClient(object):
     def delete(self, url, params=None, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(lambda: requests.delete(url, headers=headers, params=params or {}, json=data, timeout=self.options.timeout))
+        response = self._retry(
+            lambda: requests.delete(url, headers=headers, params=params or {}, json=data, timeout=self.options.timeout))
         return self._process_response(response)
 
-    def _process_response(self, response):
-        return self._parse(response).content()
+    def _process_response(self, response, schema=None):
+        return self._parse(response, schema).content()
 
-    def _parse(self, response):
+    def _parse(self, response, schema=None):
         if not response.text:
             return EmptyResponse(response.status_code)
         try:
-            return JsonResponse(response)
+            return JsonResponse(response, schema)
         except ValueError:
             return PlainResponse(response)
 
@@ -201,8 +203,11 @@ class Response(object):
 
 
 class JsonResponse(Response):
-    def __init__(self, response):
-        content = json.loads(response.text)
+    def __init__(self, response, schema: Schema = None):
+        if schema is not None and response.status_code < 400:
+            content = schema.loads(json_data=response.text)
+        else:
+            content = json.loads(response.text)
         super(JsonResponse, self).__init__(response.status_code, content, response.headers)
 
     def _error_code(self):
