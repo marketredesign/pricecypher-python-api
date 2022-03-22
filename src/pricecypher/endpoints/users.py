@@ -1,9 +1,10 @@
+from pricecypher.endpoints.base_endpoint import BaseEndpoint
 from pricecypher.models import Dataset
 from pricecypher.rest import RestClient
 
 
-class UsersEndpoint(object):
-    """PriceCypher dataset endpoints in user tool.
+class UsersEndpoint(BaseEndpoint):
+    """PriceCypher endpoints in user tool.
 
     :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:datasets' scope.
     :param str users_base: (optional) Base URL for PriceCypher user tool API.
@@ -13,21 +14,25 @@ class UsersEndpoint(object):
     """
 
     def __init__(self, bearer_token, users_base='https://users.pricecypher.com', rest_options=None):
-        self.users_base = users_base
+        self.base_url = users_base
         self.bearer_token = bearer_token
         self.client = RestClient(jwt=bearer_token, options=rest_options)
 
-    def _url(self, path):
-        return '{}/{}'.format(self.users_base.strip('/'), path.strip('/'))
-
     def datasets(self):
+        """
+        Dataset endpoints in user tool API.
+        :rtype: DatasetsEndpoint
+        """
         return DatasetsEndpoint(self.client, self._url('api/datasets'))
 
 
-class DatasetsEndpoint(object):
+class DatasetsEndpoint(BaseEndpoint):
+    """
+    PriceCypher dataset endpoints in user tool API.
+    """
     def __init__(self, client, base):
         self.client = client
-        self.base = base
+        self.base_url = base
 
     def index(self) -> list[Dataset]:
         """List all available datasets the user has access to.
@@ -35,4 +40,4 @@ class DatasetsEndpoint(object):
         :return: list of datasets.
         :rtype list[Dataset]
         """
-        return self.client.get(self.base, schema=Dataset.Schema(many=True))
+        return self.client.get(self._url(), schema=Dataset.Schema(many=True))

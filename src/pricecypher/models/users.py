@@ -1,7 +1,6 @@
 from dataclasses import field
 from datetime import datetime
 from typing import Optional
-
 from marshmallow_dataclass import dataclass
 
 from pricecypher.models.namespaced_schema import NamespacedSchema

@@ -2,7 +2,8 @@ from marshmallow import SchemaOpts, Schema, pre_load, post_dump
 
 
 class NamespaceOpts(SchemaOpts):
-    """Same as the default class Meta options, but adds "name" and "plural_name" options for enveloping.
+    """
+    Same as the default class Meta options, but adds `name` and `plural_name` options for enveloping.
     """
 
     def __init__(self, meta, **kwargs):

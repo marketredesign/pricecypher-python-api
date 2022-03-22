@@ -1,7 +1,6 @@
 from dataclasses import field
 from datetime import datetime
 from typing import Optional, List, Union
-
 from marshmallow_dataclass import dataclass
 
 from pricecypher.models.namespaced_schema import NamespacedSchema
@@ -73,3 +72,28 @@ class Transaction:
     class Meta:
         name = "transaction"
         plural_name = "transactions"
+
+    def to_dict(self, scope_keys):
+        dic = {
+            'id': self.id,
+            'external_id': self.external_id,
+            'count': self.count,
+            'volume': self.volume,
+            'price': self.price,
+            'date_time': self.date_time,
+            'currency': self.currency,
+            'unit': self.unit,
+        }
+
+        for scope_value in self.scope_values:
+            if scope_value.scope_id in scope_keys:
+                scope_key = scope_keys[scope_value.scope_id]
+                dic[scope_key] = scope_value.value
+
+        for scope_constant in self.scope_constants:
+            if scope_constant.scope_id in scope_keys:
+                scope_key = scope_keys[scope_constant.scope_id]
+                dic[scope_key] = scope_constant.constant
+
+        return dic
+

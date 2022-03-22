@@ -1,17 +1,18 @@
 import json
 import requests
+from time import sleep
+from random import randint
+from datetime import datetime
 from marshmallow import Schema
 
 from .exceptions import PriceCypherError, RateLimitError
-from time import sleep
-from random import randint
 
 UNKNOWN_ERROR = 'pricecypher.sdk.internal.unknown'
 
 
 class RestClientOptions(object):
-    """Configuration object for RestClient.
-
+    """
+    Configuration object for RestClient.
     Used for configuring additional RestClient options, such as rate-limit retries.
 
     :param float or tuple[float,float] timeout: (optional) Change the requests connect and read timeout (in seconds).
@@ -35,7 +36,8 @@ class RestClientOptions(object):
 
 
 class RestClient(object):
-    """Provides simple methods for handling all RESTful api endpoints.
+    """
+    Provides simple methods for handling all RESTful api endpoints.
 
     :param str jwt: JWT token used to authorize requests to the APIs.
     :param RestClientOptions options: (optional) Pass an instance of RestClientOptions to configure additional
@@ -128,8 +130,9 @@ class RestClient(object):
 
     def post(self, url, data=None, schema: Schema = None):
         headers = self.base_headers.copy()
+        j_data = json.dumps(data, cls=JsonEncoder)
+        response = self._retry(lambda: requests.post(url, data=j_data, headers=headers, timeout=self.options.timeout))
 
-        response = self._retry(lambda: requests.post(url, json=data, headers=headers, timeout=self.options.timeout))
         return self._process_response(response, schema)
 
     def file_post(self, url, data=None, files=None):
@@ -200,6 +203,13 @@ class Response(object):
 
     def _error_message(self):
         raise NotImplementedError
+
+
+class JsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
 
 
 class JsonResponse(Response):
