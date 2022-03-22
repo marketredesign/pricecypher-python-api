@@ -72,7 +72,7 @@ class TestRest(unittest.TestCase):
         mock_post.return_value.status_code = 200
 
         rc.post('the-url')
-        mock_post.assert_called_with('the-url', json=None, headers=headers, timeout=(10, 2))
+        mock_post.assert_called_with('the-url', data='null', headers=headers, timeout=(10, 2))
 
     @mock.patch('requests.put')
     def test_put_custom_timeout(self, mock_put):
@@ -346,10 +346,11 @@ class TestRest(unittest.TestCase):
         mock_post.return_value.text = '{"a": "b"}'
 
         data = {'some': 'data'}
+        j_data = '{"some": "data"}'
 
         mock_post.return_value.status_code = 200
         response = rc.post('the/url', data=data)
-        mock_post.assert_called_with('the/url', json=data, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_post.assert_called_with('the/url', data=j_data, headers=headers, timeout=self.TIMEOUT_DEF)
 
         self.assertEqual(response, {'a': 'b'})
 
