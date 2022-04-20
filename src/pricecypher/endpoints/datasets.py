@@ -10,17 +10,13 @@ class DatasetsEndpoint(BaseEndpoint):
     :param int dataset_id: Dataset ID.
     :param str dss_base: (optional) Base URL for PriceCypher dataset service API.
         (defaults to https://datasets.pricecypher.com)
-    :param str users_base: (optional) Base URL for PriceCypher user tool API.
-        (defaults to https://users.pricecypher.com)
     :param RestClientOptions rest_options: (optional) Set any additional options for the REST client, e.g. rate-limit.
         (defaults to None)
     """
 
-    def __init__(self, bearer_token, dataset_id, dss_base='https://datasets.pricecypher.com',
-                 users_base='https://users.pricecypher.com', rest_options=None):
+    def __init__(self, bearer_token, dataset_id, dss_base='https://datasets.pricecypher.com', rest_options=None):
         self.bearer_token = bearer_token
         self.dataset_id = dataset_id
-        self.users_base = users_base
         self.base_url = dss_base
         self.client = RestClient(jwt=bearer_token, options=rest_options)
 

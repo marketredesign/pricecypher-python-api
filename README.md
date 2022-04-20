@@ -65,6 +65,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Setup
 The `endpoints` module models the different PriceCypher API endpoints. Each file represents a different API and the
 contents of each file are structured into the different endpoints that are provided by the API.
+Similarly, each file in the `models` module defines the models that are provided by the different APIs.
 
 The SDK that this package provides is contained in the top-level package contents.
 

@@ -11,12 +11,12 @@ class Scope:
     id: int = field(compare=True)
     data_version_id: int = field(compare=False)
     order: Optional[int] = field(compare=False)
-    type: str = field(compare=False)  # TODO enum
-    representation: Optional[str] = field(compare=False)  # TODO enum
+    type: str = field(compare=False)
+    representation: Optional[str] = field(compare=False)
     name_dataset: str = field(compare=False)
     name_human: Optional[str] = field(compare=False)
     multiply_by_volume_enabled: bool = field(compare=False)
-    default_aggregation_method: Optional[str] = field(compare=False)  # TODO enum
+    default_aggregation_method: Optional[str] = field(compare=False)
 
     class Meta:
         name = "scope"
