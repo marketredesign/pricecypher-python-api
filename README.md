@@ -28,70 +28,53 @@ Go through this checklist after creating your repository. It should only take a 
 - [ ] [OPTIONAL] Add a codecov.yml
 - [ ] Enable the status checks for travis and codecov.
 
-# Project Title
+# PriceCypher Python SDK
 
-One Paragraph of project description goes here
+Python wrapper around the different PriceCypher APIs.
 
-## Getting Started
+## Usage
+### Installation
+TODO
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+### Dataset SDK
+```python
+from pricecypher import Datasets
+
+datasets = Datasets(BEARER_TOKEN)
+
+datasets.index()
+datasets.get_meta(DATASET_ID)
+datasets.get_scopes(DATASET_ID)
+datasets.get_scope_values(DATASET_ID, SCOPE_ID)
+datasets.get_transaction_summary(DATASET_ID)
+
+columns = [
+    {'name_dataset': 'cust_group', 'filter': ['Big', 'Small'], 'key': 'group'},
+    {'representation': 'cost_price', 'aggregate': 'sum', 'key': 'cost_price'}
+]
+datasets.get_transactions(DATASET_ID, AGGREGATE, columns)
+```
+
+## Development
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
 ### Prerequisites
+* Python >= 3.9
 
-What things you need to install the software and how to install them
+### Setup
+The `endpoints` module models the different PriceCypher API endpoints. Each file represents a different API and the
+contents of each file are structured into the different endpoints that are provided by the API.
+Similarly, each file in the `models` module defines the models that are provided by the different APIs.
 
-```
-Give examples
-```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system.
-
-### Break down into end to end tests
-
-Explain what these tests test and why.
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why.
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
+The SDK that this package provides is contained in the top-level package contents.
 
 ## Authors
 
-* **YOUR NAME HERE** - *Initial work*
+* **Marijn van der Horst** - *Initial work*
 
-See also the list of [contributors](https://github.com/marketredesign/your_project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/marketredesign/pricecypher_python_api/contributors) who participated in this project.
 
 ## License
 
-This project is licensed under the MRD License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
