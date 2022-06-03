@@ -47,13 +47,13 @@ class TransactionSummary:
 @dataclass(frozen=True)
 class ScopeValueTransaction:
     scope_id: int
-    value: str
+    value: Optional[str]
 
 
 @dataclass(frozen=True)
 class ScopeConstantTransaction:
     scope_id: int
-    constant: Union[str, float]
+    constant: Union[str, float, None]
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)
