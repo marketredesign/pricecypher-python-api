@@ -8,9 +8,9 @@ class Script(ABC):
         a script can be created that can be used in a generalized yet controlled setting.
     """
 
-    dataset_id: Annotated[int, "The dataset ID"] = None
+    dataset_id: Annotated[int, "The dataset ID"]
     settings: dict[str, Any]
-    config: dict[str, dict[str, Any]] = {}
+    config: dict[str, dict[str, Any]]
 
     def __init__(self, dataset_id: int, settings: dict[str, any], config: dict[str, dict[str, Any]]):
         self.dataset_id = dataset_id
