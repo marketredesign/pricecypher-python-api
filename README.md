@@ -51,6 +51,7 @@ The SDK that this package provides is contained in the top-level package content
 ## Authors
 
 * **Marijn van der Horst** - *Initial work*
+* **Pieter Voors** - *Contracts*
 
 See also the list of [contributors](https://github.com/marketredesign/pricecypher_python_sdk/contributors) who participated in this project.
 
