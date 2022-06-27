@@ -25,6 +25,11 @@ columns = [
 datasets.get_transactions(DATASET_ID, AGGREGATE, columns)
 ```
 
+### Contracts
+The `Script` or `ScopeScript` abstract classes can be extended with their abstract methods implemented to create 
+scripts usable in other services. The `ScopeScript` in particular is intended for scripts that calculate values of 
+certain scopes for transactions. See the documentation on the abstract functions for further specifics.
+
 ## Development
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
