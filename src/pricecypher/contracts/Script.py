@@ -4,10 +4,11 @@ from typing import Any, Optional, Annotated
 
 class Script(ABC):
     """
-    TODO Comment Script class
+    The abstract Script class serves as an interaction contract such that by extending it with its methods implemented,
+        a script can be created that can be used in a generalized yet controlled setting.
     """
 
-    dataset_id: Annotated[int, "The dataset ID"] = None  # A comment
+    dataset_id: Annotated[int, "The dataset ID"] = None
     settings: dict[str, Any]
     config: dict[str, dict[str, Any]] = {}
 
@@ -19,29 +20,38 @@ class Script(ABC):
     @abstractmethod
     def get_config_dependencies(self) -> dict[str, list[str]]:
         """
-        TODO Comment
+        Fetch the configuration sections and keys in the sections that the script will use that are not yet provided.
 
-        :return:
+        NB: It is not needed to return all required sections and keys, only at least one that has not been provided yet.
+        If all required config is provided, an empty dictionary is to be returned.
+
+        :return: dictionary mapping from section key (string) to a (potentially empty) list of keys of that section
+            that the script requires additionally.
         """
         raise NotImplementedError
 
     @abstractmethod
     def get_scope_dependencies(self) -> list[dict[str, Any]]:
         """
-        TODO Comment
+        Fetch the scopes that the script will use and requires to be present in the dataset.
 
-        :return:
+        NB: All required config is assumed to be present.
+
+        :return: List of required scopes, where each is a dictionary containing either
+            a 'representation' or a 'scope_id'.
         """
         raise NotImplementedError
 
     @abstractmethod
     def execute(self, business_cell_id: Optional[int], bearer_token: str, user_input: dict[Any: Any]) -> Any:
         """
-        TODO Comment
+        Execute the script
 
-        :param business_cell_id:
-        :param bearer_token:
-        :param user_input:
-        :return:
+        NB: All required config and scopes are assumed to be present.
+
+        :param business_cell_id: Business cell to execute the script for, or None if running the script for all.
+        :param bearer_token: Bearer token to use for additional requests.
+        :param user_input: Dictionary of additional json-serializable input provided by the caller of the script.
+        :return: Any json-serializable results the script outputs.
         """
         raise NotImplementedError

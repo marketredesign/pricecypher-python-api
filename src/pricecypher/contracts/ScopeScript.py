@@ -6,7 +6,9 @@ from pricecypher.contracts.Script import Script
 
 class ScopeScript(Script, ABC):
     """
-    TODO Comment scope script class
+    The abstract ScopeScript class serves as an interaction contract such that by extending it with its
+        methods implemented, a script can be created that calculates values for some scope for transactions,
+        which can then be used in a generalized yet controlled setting.
     """
 
     def execute(self, business_cell_id: Optional[int], bearer_token: str, user_input: dict[Any: Any]) -> Any:
@@ -23,11 +25,11 @@ class ScopeScript(Script, ABC):
         transaction_ids: list[int]
     ) -> dict[int, str]:
         """
-        TODO Comment
+        Execute the script to calculate the values of some scope for the given transactions.
 
-        :param business_cell_id:
-        :param bearer_token:
-        :param transaction_ids:
-        :return:
+        :param business_cell_id: Business cell to execute the script for, or None if running the script for all.
+        :param bearer_token: Bearer token to use for additional requests.
+        :param transaction_ids: List of transaction IDs to calculate the scope values/constants for.
+        :return: Dictionary mapping every transaction ID to a string value for the scope of this script.
         """
         raise NotImplementedError
