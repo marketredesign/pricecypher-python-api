@@ -14,6 +14,8 @@ class ScopeScript(Script, ABC):
     def execute(self, business_cell_id: Optional[int], bearer_token: str, user_input: dict[Any: Any]) -> Any:
         # Executing a scope-script like a normal script:
         # Attempt to extract the transaction IDs and continue as normal
+        if 'transaction_ids' not in user_input:
+            raise Exception('Expected input key "transaction_ids" not present.')
         transaction_ids: list[int] = user_input['transaction_ids']
         return self.execute_scope_script(business_cell_id, bearer_token, transaction_ids)
 

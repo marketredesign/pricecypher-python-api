@@ -12,7 +12,7 @@ class Script(ABC):
     settings: dict[str, Any]
     config: dict[str, dict[str, Any]]
 
-    def __init__(self, dataset_id: int, settings: dict[str, any], config: dict[str, dict[str, Any]]):
+    def __init__(self, dataset_id: int, settings: dict[str, Any], config: dict[str, dict[str, Any]]):
         self.dataset_id = dataset_id
         self.settings = settings
         self.config = config
