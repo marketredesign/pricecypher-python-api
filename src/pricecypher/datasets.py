@@ -173,7 +173,7 @@ class Datasets(object):
             raise ValueError('start_date_time should be an instance of datetime.')
 
         if isinstance(end_date_time, datetime):
-            request_data['end_date_time'] = start_date_time
+            request_data['end_date_time'] = end_date_time
         elif end_date_time is not None:
             raise ValueError('end_date_time should be an instance of datetime.')
 
