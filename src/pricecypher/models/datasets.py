@@ -15,6 +15,7 @@ class Scope:
     representation: Optional[str] = field(compare=False)
     name_dataset: str = field(compare=False)
     name_human: Optional[str] = field(compare=False)
+    name_human_times_volume: Optional[str] = field(compare=False)
     multiply_by_volume_enabled: bool = field(compare=False)
     default_aggregation_method: Optional[str] = field(compare=False)
 
