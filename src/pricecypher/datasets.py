@@ -178,8 +178,13 @@ class Datasets(object):
         request_data = {
             'aggregate': aggregate,
             'select_scopes': select_scopes,
-            'intake_status': intake_status if intake_status is not None else self.default_dss_intake_status,
         }
+
+        # Attach the intake status if specified
+        if intake_status is None:
+            intake_status = self.default_dss_intake_status
+        if intake_status is not None:
+            request_data['intake_status'] = intake_status
 
         if len(filters) > 0:
             request_data['filter_scope_values'] = filters
