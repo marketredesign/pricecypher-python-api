@@ -96,9 +96,13 @@ class TransactionsEndpoint(BaseEndpoint):
         # TODO: use TransactionPage schema and combine multiple pages into one transactions response.
         return self.client.post(self._url(), data=data, schema=Transaction.Schema(many=True))
 
-    def summary(self):
+    def summary(self, intake_status=None):
         """
         Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
+        :param intake_status: (Optional) intake status to fetch the summary for.
         :rtype: TransactionSummary
         """
-        return self.client.get(self._url('summary'), schema=TransactionSummary.Schema())
+        params = {}
+        if intake_status is not None:
+            params['intake_status'] = intake_status
+        return self.client.get(self._url('summary'), params=params, schema=TransactionSummary.Schema())
