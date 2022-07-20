@@ -15,6 +15,7 @@ class Scope:
     representation: Optional[str] = field(compare=False)
     name_dataset: str = field(compare=False)
     name_human: Optional[str] = field(compare=False)
+    name_human_times_volume: Optional[str] = field(compare=False)
     multiply_by_volume_enabled: bool = field(compare=False)
     default_aggregation_method: Optional[str] = field(compare=False)
 
@@ -54,6 +55,7 @@ class ScopeValueTransaction:
 class ScopeConstantTransaction:
     scope_id: int
     constant: Union[str, float, None]
+    volume_multiplied_constant: Optional[Union[str, float, None]]
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)

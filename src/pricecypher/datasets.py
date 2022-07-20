@@ -20,6 +20,12 @@ class Datasets(object):
         (defaults to None)
     """
 
+    """ 
+    Default intake status to fetch when fetching transaction info, or None to let the dataset service decide. 
+    NB: Can be set statically with Datasets.default_dss_intake_status = '...'
+    """
+    default_dss_intake_status = None
+
     def __init__(self, bearer_token, users_base='https://users.pricecypher.com', dss_base=None, rest_options=None):
         self._bearer = bearer_token
         self._users_base = users_base
@@ -100,23 +106,35 @@ class Datasets(object):
             .scope_values(scope_id)
         )
 
-    def get_transaction_summary(self, dataset_id, bc_id='all'):
+    def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None):
         """
         Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
 
         :param int dataset_id: Dataset to retrieve summary for.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
+        :param str intake_status: (Optional) If specified, the summary is fetched of the last intake with this status.
         :return: Summary of the transactions.
         :rtype: TransactionSummary
         """
+        if intake_status is None:
+            intake_status = self.default_dss_intake_status
         dss_base = self._get_dss_base(dataset_id)
         return DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
             .business_cell(bc_id) \
             .transactions() \
-            .summary()
+            .summary(intake_status)
 
-    def get_transactions(self, dataset_id, aggregate, columns, start_date_time=None, end_date_time=None, bc_id='all'):
+    def get_transactions(
+        self,
+        dataset_id,
+        aggregate,
+        columns,
+        start_date_time=None,
+        end_date_time=None,
+        bc_id='all',
+        intake_status=None,
+    ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
         parameter. The desired columns, as well as filters and aggregation methods, can be specified.
@@ -135,6 +153,7 @@ class Datasets(object):
         :param datetime end_date_time: When specified, only transactions before this date are considered.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
+        :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :return: Dataframe of transactions.
         :rtype: DataFrame
         """
@@ -160,6 +179,12 @@ class Datasets(object):
             'aggregate': aggregate,
             'select_scopes': select_scopes,
         }
+
+        # Attach the intake status if specified
+        if intake_status is None:
+            intake_status = self.default_dss_intake_status
+        if intake_status is not None:
+            request_data['intake_status'] = intake_status
 
         if len(filters) > 0:
             request_data['filter_scope_values'] = filters
