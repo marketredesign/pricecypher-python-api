@@ -55,6 +55,7 @@ class ScopeValueTransaction:
 class ScopeConstantTransaction:
     scope_id: int
     constant: Union[str, float, None]
+    volume_multiplied_constant: Optional[Union[str, float, None]]
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)
