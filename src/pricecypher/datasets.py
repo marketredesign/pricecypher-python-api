@@ -13,7 +13,7 @@ class Datasets(object):
     :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:datasets' scope.
     :param str users_base: (optional) Base URL for PriceCypher user tool API. Used to find base URL of dataset service,
         when no dss_base is provided.
-        (defaults to https://users.pricecypher.com)
+        (defaults to the static default_users_base, which by default is https://users.pricecypher.com)
     :param str dss_base: (optional) Base URL for PriceCypher dataset service API.
         (defaults to dss_url property as returned for the dataset by the PriceCypher user tool API)
     :param RestClientOptions rest_options: (optional) Set any additional options for the REST client, e.g. rate-limit.
@@ -26,9 +26,12 @@ class Datasets(object):
     """
     default_dss_intake_status = None
 
-    def __init__(self, bearer_token, users_base='https://users.pricecypher.com', dss_base=None, rest_options=None):
+    """ Default user-tool base URL """
+    default_users_base = 'https://users.pricecypher.com'
+
+    def __init__(self, bearer_token, users_base=None, dss_base=None, rest_options=None):
         self._bearer = bearer_token
-        self._users_base = users_base
+        self._users_base = users_base if users_base is not None else self.default_users_base
         self._dss_base = dss_base
         self._rest_options = rest_options
         self._all_meta = None
