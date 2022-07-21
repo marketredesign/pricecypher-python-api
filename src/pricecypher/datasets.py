@@ -13,7 +13,7 @@ class Datasets(object):
     :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:datasets' scope.
     :param str users_base: (optional) Base URL for PriceCypher user tool API. Used to find base URL of dataset service,
         when no dss_base is provided.
-        (defaults to https://users.pricecypher.com)
+        (defaults to the static default_users_base, which by default is https://users.pricecypher.com)
     :param str dss_base: (optional) Base URL for PriceCypher dataset service API.
         (defaults to dss_url property as returned for the dataset by the PriceCypher user tool API)
     :param RestClientOptions rest_options: (optional) Set any additional options for the REST client, e.g. rate-limit.
@@ -26,9 +26,12 @@ class Datasets(object):
     """
     default_dss_intake_status = None
 
-    def __init__(self, bearer_token, users_base='https://users.pricecypher.com', dss_base=None, rest_options=None):
+    """ Default user-tool base URL """
+    default_users_base = 'https://users.pricecypher.com'
+
+    def __init__(self, bearer_token, users_base=None, dss_base=None, rest_options=None):
         self._bearer = bearer_token
-        self._users_base = users_base
+        self._users_base = users_base if users_base is not None else self.default_users_base
         self._dss_base = dss_base
         self._rest_options = rest_options
         self._all_meta = None
@@ -216,8 +219,8 @@ class Datasets(object):
         Find the scope for each provided column and return new list of columns with scope information stored inside.
 
         :param int dataset_id: Dataset ID to retrieve scopes for.
-        :param list[dict] columns: Each column should be a dict with either a `representation` or `name_dataset`
-            property.
+        :param list[dict] columns: Each column should be a dict with either a `scope_id`, `representation`
+            or `name_dataset` property.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
         :return: New list of columns, with for each column an added `scope` property.
@@ -226,14 +229,18 @@ class Datasets(object):
         all_scopes = self.get_scopes(dataset_id, bc_id)
 
         def add_scope(column: dict):
-            if 'representation' in column and 'name_dataset' in column:
-                raise ValueError('Both `representation` and `name_dataset` provided for column {0}'.format(str(column)))
+            if ('scope_id' in column) + ('representation' in column) + ('name_dataset' in column) != 1:
+                raise ValueError(
+                    f'Not exactly one of `scope_id`, `representation` or `name_dataset` provided for column {column}'
+                )
+            elif 'scope_id' in column:
+                scope = all_scopes.find_by_id(column['scope_id'])
             elif 'representation' in column:
                 scope = all_scopes.find_by_repr(column['representation'])
             elif 'name_dataset' in column:
                 scope = all_scopes.find_by_name_dataset(column['name_dataset'])
             else:
-                raise ValueError('No scope could be found for column {0}'.format(str(column)))
+                raise ValueError(f'No scope could be found for column {column}')
 
             return {**column, 'scope': scope}
 
@@ -322,7 +329,7 @@ class Datasets(object):
 
         for column in columns:
             scope = column['scope']
-            key = dict.get(column, 'key', 'scope_{}'.format(scope.id))
+            key = dict.get(column, 'key', f'scope_{scope.id}')
 
             scope_keys[scope.id] = key
 

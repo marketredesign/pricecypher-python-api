@@ -6,7 +6,7 @@ class ScopeCollection(BaseCollection):
     _type = Scope
 
     def __repr__(self):
-        return "<{0} {1}>".format(self.__class__.__name__, self._list)
+        return f"<{self.__class__.__name__} {self._list}>"
 
     def __len__(self):
         """List length"""

@@ -19,4 +19,4 @@ class BaseEndpoint(metaclass=ABCMeta):
             path = '/'.join(str(s).strip('/') for s in path)
         else:
             path = path.strip('/')
-        return '{}/{}'.format(self.base_url.strip('/'), path)
+        return f'{self.base_url.strip("/")}/{path}'

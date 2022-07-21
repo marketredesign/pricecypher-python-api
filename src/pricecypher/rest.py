@@ -55,7 +55,7 @@ class RestClient(object):
         self._skip_sleep = False
 
         self.base_headers = {
-            'Authorization': 'Bearer {}'.format(self.jwt),
+            'Authorization': f'Bearer {self.jwt}',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
