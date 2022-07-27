@@ -137,6 +137,7 @@ class Datasets(object):
         end_date_time=None,
         bc_id='all',
         intake_status=None,
+        filter_transaction_ids=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
@@ -157,6 +158,7 @@ class Datasets(object):
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
+        :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
         :return: Dataframe of transactions.
         :rtype: DataFrame
         """
@@ -188,6 +190,10 @@ class Datasets(object):
             intake_status = self.default_dss_intake_status
         if intake_status is not None:
             request_data['intake_status'] = intake_status
+
+        # Attach the to-filter transaction IDs if specified
+        if filter_transaction_ids is not None:
+            request_data['filter_transaction_ids'] = filter_transaction_ids
 
         if len(filters) > 0:
             request_data['filter_scope_values'] = filters
