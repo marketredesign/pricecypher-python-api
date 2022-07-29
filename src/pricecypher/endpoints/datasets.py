@@ -1,5 +1,5 @@
 from pricecypher.endpoints.base_endpoint import BaseEndpoint
-from pricecypher.models import Scope, ScopeValue, TransactionSummary, Transaction
+from pricecypher.models import Scope, ScopeValue, TransactionSummary, TransactionsPage
 from pricecypher.rest import RestClient
 
 
@@ -93,8 +93,22 @@ class TransactionsEndpoint(BaseEndpoint):
         :param data: See documentation of dataset service on what data can be passed.
         :rtype: list[Transaction]
         """
-        # TODO: use TransactionPage schema and combine multiple pages into one transactions response.
-        return self.client.post(self._url(), data=data, schema=Transaction.Schema(many=True))
+        # Perform initial request to retrieve first page of transactions and page metadata.
+        init_response = self.client.post(self._url(), data=data, schema=TransactionsPage.Schema())
+        # Collect first page of transactions, which will be appended later when multiple pages are available.
+        transactions = init_response.transactions
+        curr_page = init_response.meta.current_page
+        last_page = init_response.meta.last_page
+        request_path = init_response.meta.path
+
+        # Loop over all available pages.
+        for page_nr in range(curr_page + 1, last_page + 1):
+            page_path = f'{request_path}?page={page_nr}'
+            page_response = self.client.post(page_path, data=data, schema=TransactionsPage.Schema())
+            # Append transactions of the current page.
+            transactions += page_response.transactions
+
+        return transactions
 
     def summary(self, intake_status=None):
         """
