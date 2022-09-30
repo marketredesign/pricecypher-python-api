@@ -1,6 +1,7 @@
 from dataclasses import field
 from datetime import datetime
 from typing import Optional, List, Union
+from marshmallow import EXCLUDE
 from marshmallow_dataclass import dataclass
 
 from pricecypher.models.namespaced_schema import NamespacedSchema
@@ -58,7 +59,7 @@ class ScopeConstantTransaction:
     volume_multiplied_constant: Optional[Union[str, float, None]]
 
 
-@dataclass(base_schema=NamespacedSchema, frozen=True)
+@dataclass(frozen=True)
 class Transaction:
     id: Optional[int]
     external_id: Optional[str]
@@ -70,10 +71,6 @@ class Transaction:
     unit: Optional[str]
     scope_values: List[ScopeValueTransaction]
     scope_constants: List[ScopeConstantTransaction]
-
-    class Meta:
-        name = "transaction"
-        plural_name = "transactions"
 
     def to_dict(self, scope_keys):
         dic = {
@@ -99,3 +96,23 @@ class Transaction:
 
         return dic
 
+
+@dataclass(frozen=True)
+class PageMeta:
+    current_page: int
+    last_page: int
+    path: str
+
+    class Meta:
+        # Exclude other fields since we don't need them.
+        unknown = EXCLUDE
+
+
+@dataclass(frozen=True)
+class TransactionsPage:
+    meta: PageMeta
+    transactions: List[Transaction]
+
+    class Meta:
+        # Exclude other fields since we don't need them.
+        unknown = EXCLUDE
