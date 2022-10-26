@@ -27,3 +27,11 @@ class TestResult:
     status: TestStatus
     element_label: str
     elements: list[ElementTest]
+
+
+@dataclass
+class TestSuite:
+    label: str
+    slug: str
+    category_slug: str
+    test_results: list[TestResult]

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any
 
-from pricecypher.contracts import TestResult, Script
+from pricecypher.contracts import Script, TestSuite
 
 
 class QualityTestScript(Script, ABC):
@@ -15,7 +15,7 @@ class QualityTestScript(Script, ABC):
         return self.execute_tests(business_cell_id, bearer_token)
 
     @abstractmethod
-    def execute_tests(self, business_cell_id: Optional[int], bearer_token: str) -> list[TestResult]:
+    def execute_tests(self, business_cell_id: Optional[int], bearer_token: str) -> TestSuite:
         """
         Execute the script to calculate the values of some scope for the given transactions.
 
