@@ -147,7 +147,7 @@ class Datasets(object):
         :param bool aggregate: If true, the transactions will be grouped on all categorical columns that have no
             aggregation method specified.
         :param list columns: Desired columns in the resulting dataframe. Each column must be a dict. Each column must
-            have either a `representation` or a `name_dataset` specified. The following properties are optional.
+            have a `representation`, `scope_id`, or `name_dataset` specified. The following properties are optional.
                 `filter`: value or list of values the resulting transactions should be filtered on.
                 `aggregate`: aggregation method that should be used for this column. When aggregating and no
                     aggregation method is specified, the method that is used is determined by the underlying dataset

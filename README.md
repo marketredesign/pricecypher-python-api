@@ -26,9 +26,15 @@ datasets.get_transactions(DATASET_ID, AGGREGATE, columns)
 ```
 
 ### Contracts
-The `Script` or `ScopeScript` abstract classes can be extended with their abstract methods implemented to create 
-scripts usable in other services. The `ScopeScript` in particular is intended for scripts that calculate values of 
-certain scopes for transactions. See the documentation on the abstract functions for further specifics.
+The `Script`, `ScopeScript`, and `QualityTestScript` abstract classes can be extended with their abstract methods
+implemented to create scripts usable in other services. 
+
+The `ScopeScript` in particular is intended for scripts that calculate values of certain scopes for transactions. 
+
+The `QualityTestScript` is intended for scripts that check the quality of a data intake and produce a standardized
+output that can be visualized and/or used by other services.
+
+See the documentation on the abstract functions for further specifics.
 
 ## Development
 
@@ -51,7 +57,7 @@ The SDK that this package provides is contained in the top-level package content
 ## Authors
 
 * **Marijn van der Horst** - *Initial work*
-* **Pieter Voors** - *Contracts*
+* **Pieter Voors** - *Contracts for Script and ScopeScript*
 
 See also the list of [contributors](https://github.com/marketredesign/pricecypher_python_sdk/contributors) who participated in this project.
 
