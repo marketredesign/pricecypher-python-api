@@ -87,9 +87,10 @@ class TransactionsEndpoint(BaseEndpoint):
         self.client = client
         self.base_url = base
 
-    def index(self, data):
+    def index(self, data, page_cb=lambda page: None):
         """
         Display a listing of transactions. The given data will be passed directly to the dataset service.
+        :param page_cb: Callback function with input a single page of transactions, called for each individual page.
         :param data: See documentation of dataset service on what data can be passed.
         :rtype: list[Transaction]
         """
@@ -101,10 +102,16 @@ class TransactionsEndpoint(BaseEndpoint):
         last_page = init_response.meta.last_page
         request_path = init_response.meta.path
 
+        page_cb(transactions)
+
         # Loop over all available pages.
         for page_nr in range(curr_page + 1, last_page + 1):
             page_path = f'{request_path}?page={page_nr}'
             page_response = self.client.post(page_path, data=data, schema=TransactionsPage.Schema())
+
+            # Call callback function with this page of transactions
+            page_cb(page_response.transactions)
+
             # Append transactions of the current page.
             transactions += page_response.transactions
 

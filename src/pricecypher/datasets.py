@@ -138,6 +138,7 @@ class Datasets(object):
         bc_id='all',
         intake_status=None,
         filter_transaction_ids=None,
+        page_cb=lambda page: None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
@@ -159,6 +160,8 @@ class Datasets(object):
             (defaults to 'all')
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
+        :param page_cb: (Optional) Callback function with as input a single page of transactions,
+            which gets called for each individual page.
         :return: Dataframe of transactions.
         :rtype: DataFrame
         """
@@ -215,9 +218,21 @@ class Datasets(object):
         transactions = DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
             .business_cell(bc_id) \
             .transactions() \
-            .index(request_data)
+            .index(request_data, lambda page: page_cb(self._transactions_to_df(page, scope_keys)))
 
         # Map transactions to dicts based on the provided column keys and convert to pandas dataframe.
+        return self._transactions_to_df(transactions, scope_keys)
+
+    def _transactions_to_df(self, transactions, scope_keys):
+        """
+        Transform the given list of transactions to a DataFrame, using the given `scope_keys` mapping from scope IDs to
+        column names.
+
+        :param list[Transaction] transactions: List of transactions as re
+        :param dict scope_keys: Dictionary of scope IDs to column keys.
+        :return: DataFrame containing the given transactions.
+        :rtype: DataFrame
+        """
         return DataFrame.from_records([t.to_dict(scope_keys) for t in transactions])
 
     def _add_scopes(self, dataset_id, columns, bc_id='all'):
