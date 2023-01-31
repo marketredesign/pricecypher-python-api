@@ -51,8 +51,14 @@ Similarly, each file in the `models` module defines the models that are provided
 The SDK that this package provides is contained in the top-level package contents.
 
 ## Deployment
-1. Execute `python3 -m build` to build the source archive and a built distribution.
-2. Execute `python3 -m twine upload dist/*` to upload the package to PyPi.
+1. Execute `python -m build` to build the source archive and a built distribution.
+2. Execute `python -m twine upload dist/*` to upload the package to PyPi.
+
+### Snapshot
+To deploy a snapshot release, follow the next steps instead.
+1. Add `-pre` to the version in `setup.cfg`.
+2. Execute `python -m build -C--global-option=egg_info -C--global-option=--tag-build=dev`.
+3. Execute `python -m twine upload dist/*`.
 
 ## Authors
 
