@@ -94,6 +94,9 @@ class TransactionsEndpoint(BaseEndpoint):
         :return: A list of all returned transactions, potentially across multiple pages.
         :rtype: list[Transaction]
         """
+        # Keep track of all page callback tasks, so we can ensure all tasks are finished before returning.
+        callbacks = []
+
         # Perform initial request to retrieve first page of transactions and page metadata.
         logging.debug('Requesting first page of transactions...')
         init_response = await self.client.post(self._url(), data=data, schema=TransactionsPage.Schema())
@@ -106,7 +109,7 @@ class TransactionsEndpoint(BaseEndpoint):
         request_path = init_response.meta.path
 
         # Schedule async page callback to be handled by the caller.
-        asyncio.create_task(page_cb(transactions, curr_page, last_page))
+        callbacks.append(asyncio.create_task(page_cb(transactions, curr_page, last_page)))
 
         # Loop over all available pages.
         for page_nr in range(curr_page + 1, last_page + 1):
@@ -116,10 +119,13 @@ class TransactionsEndpoint(BaseEndpoint):
             logging.debug(f'Received transaction page {page_nr}/{last_page}.')
 
             # Schedule async page callback function with this page of transactions.
-            asyncio.create_task(page_cb(page_response.transactions, page_nr, last_page))
+            callbacks.append(asyncio.create_task(page_cb(page_response.transactions, page_nr, last_page)))
 
             # Append transactions of the current page.
             transactions += page_response.transactions
+
+        # Wait for all callbacks to be done executing.
+        await asyncio.gather(*callbacks)
 
         return transactions
 

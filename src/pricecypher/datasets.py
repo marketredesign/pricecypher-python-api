@@ -228,17 +228,17 @@ class Datasets(object):
         elif end_date_time is not None:
             raise ValueError('end_date_time should be an instance of datetime.')
 
-        async def page_cb(page, page_nr, last_page):
+        async def local_page_cb(page, page_nr, last_page):
             """ This callback function will be executed for each received page of transactions. """
             if page_cb is not None:
                 logging.debug(f'Scheduling transaction page handler for page {page_nr}/{last_page}.')
-                asyncio.create_task(page_cb(self._transactions_to_df(page, scope_keys), page_nr, last_page))
+                await page_cb(self._transactions_to_df(page, scope_keys), page_nr, last_page)
 
         # Fetch transactions from the dataset service.
         transactions = await DatasetsEndpoint(self._client, dataset_id, dss_base) \
             .business_cell(bc_id) \
             .transactions() \
-            .index(request_data, page_cb)
+            .index(request_data, local_page_cb)
 
         logging.debug(f"Received all transactions at {time.strftime('%X')}, creating data frame...")
         # Map transactions to dicts based on the provided column keys and convert to pandas dataframe.
