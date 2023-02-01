@@ -1,8 +1,13 @@
+import asyncio
+import logging
+import time
+
 from datetime import datetime
 from pandas import DataFrame
 
 from pricecypher.collections import ScopeCollection, ScopeValueCollection
 from pricecypher.endpoints import DatasetsEndpoint, UsersEndpoint
+from pricecypher.rest import RestClient
 
 
 class Datasets(object):
@@ -35,8 +40,15 @@ class Datasets(object):
         self._dss_base = dss_base
         self._rest_options = rest_options
         self._all_meta = None
+        self._client = RestClient(jwt=bearer_token, options=rest_options)
 
-    def _get_dss_base(self, dataset_id):
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._client.close()
+
+    async def _get_dss_base(self, dataset_id):
         """
         Get dataset service url base for the given dataset ID.
         Will be fetched from dataset META if no dss_base present.
@@ -49,9 +61,10 @@ class Datasets(object):
         if self._dss_base is not None:
             return self._dss_base
 
-        return self.get_meta(dataset_id).dss_url
+        meta = await self.get_meta(dataset_id)
+        return meta.dss_url
 
-    def index(self):
+    async def index(self):
         """
         List all available datasets the user has access to.
         Response is cached in this instance for as long as this instance lives.
@@ -60,20 +73,20 @@ class Datasets(object):
         :rtype list[Dataset]
         """
         if self._all_meta is None:
-            self._all_meta = UsersEndpoint(self._bearer, self._users_base, self._rest_options).datasets().index()
+            self._all_meta = await UsersEndpoint(self._client, self._users_base).datasets().index()
 
         return self._all_meta
 
-    def get_meta(self, dataset_id):
+    async def get_meta(self, dataset_id):
         """
         Get metadata like the dataset service url and time of creation of a dataset
 
         :param dataset_id: Dataset to get metadata for.
         :rtype: Dataset
         """
-        return next((d for d in self.index() if d.id == dataset_id), None)
+        return next((d for d in await self.index() if d.id == dataset_id), None)
 
-    def get_scopes(self, dataset_id, bc_id='all'):
+    async def get_scopes(self, dataset_id, bc_id='all'):
         """
         Get all scopes for the given dataset.
 
@@ -83,14 +96,15 @@ class Datasets(object):
         :return: Collection of scopes for the given dataset.
         :rtype: ScopeCollection
         """
+        dss_base = await self._get_dss_base(dataset_id)
         return ScopeCollection(
-            DatasetsEndpoint(self._bearer, dataset_id, self._get_dss_base(dataset_id), self._rest_options)
+            await DatasetsEndpoint(self._client, dataset_id, dss_base)
             .business_cell(bc_id)
             .scopes()
             .index()
         )
 
-    def get_scope_values(self, dataset_id, scope_id, bc_id='all'):
+    async def get_scope_values(self, dataset_id, scope_id, bc_id='all'):
         """
         Get all scopes values for the given scope within the given dataset.
 
@@ -101,15 +115,15 @@ class Datasets(object):
         :return: Collection of scope values for the given scope within the given dataset.
         :rtype: ScopeValueCollection
         """
-        dss_base = self._get_dss_base(dataset_id)
+        dss_base = await self._get_dss_base(dataset_id)
         return ScopeValueCollection(
-            DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options)
+            await DatasetsEndpoint(self._client, dataset_id, dss_base)
             .business_cell(bc_id)
             .scopes()
             .scope_values(scope_id)
         )
 
-    def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None):
+    async def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None):
         """
         Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
 
@@ -122,13 +136,13 @@ class Datasets(object):
         """
         if intake_status is None:
             intake_status = self.default_dss_intake_status
-        dss_base = self._get_dss_base(dataset_id)
-        return DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
+        dss_base = await self._get_dss_base(dataset_id)
+        return await DatasetsEndpoint(self._client, dataset_id, dss_base) \
             .business_cell(bc_id) \
             .transactions() \
             .summary(intake_status)
 
-    def get_transactions(
+    async def get_transactions(
         self,
         dataset_id,
         aggregate,
@@ -138,7 +152,7 @@ class Datasets(object):
         bc_id='all',
         intake_status=None,
         filter_transaction_ids=None,
-        page_cb=lambda page: None,
+        page_cb=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
@@ -165,9 +179,9 @@ class Datasets(object):
         :return: Dataframe of transactions.
         :rtype: DataFrame
         """
-        dss_base = self._get_dss_base(dataset_id)
+        dss_base = await self._get_dss_base(dataset_id)
         # Find scopes for the provided columns.
-        columns_with_scopes = self._add_scopes(dataset_id, columns, bc_id)
+        columns_with_scopes = await self._add_scopes(dataset_id, columns, bc_id)
         # Map each scope to the provided column key.
         scope_keys = self._find_scope_keys(columns_with_scopes)
         # Find the scope IDs that should be selected.
@@ -214,14 +228,24 @@ class Datasets(object):
         elif end_date_time is not None:
             raise ValueError('end_date_time should be an instance of datetime.')
 
+        async def page_cb(page, page_nr, last_page):
+            """ This callback function will be executed for each received page of transactions. """
+            if page_cb is not None:
+                logging.debug(f'Scheduling transaction page handler for page {page_nr}/{last_page}.')
+                asyncio.create_task(page_cb(self._transactions_to_df(page, scope_keys), page_nr, last_page))
+
         # Fetch transactions from the dataset service.
-        transactions = DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
+        transactions = await DatasetsEndpoint(self._client, dataset_id, dss_base) \
             .business_cell(bc_id) \
             .transactions() \
-            .index(request_data, lambda page: page_cb(self._transactions_to_df(page, scope_keys)))
+            .index(request_data, page_cb)
 
+        logging.debug(f"Received all transactions at {time.strftime('%X')}, creating data frame...")
         # Map transactions to dicts based on the provided column keys and convert to pandas dataframe.
-        return self._transactions_to_df(transactions, scope_keys)
+        df = self._transactions_to_df(transactions, scope_keys)
+        logging.debug(f"Data frame created at {time.strftime('%X')}.")
+
+        return df
 
     def _transactions_to_df(self, transactions, scope_keys):
         """
@@ -235,7 +259,7 @@ class Datasets(object):
         """
         return DataFrame.from_records([t.to_dict(scope_keys) for t in transactions])
 
-    def _add_scopes(self, dataset_id, columns, bc_id='all'):
+    async def _add_scopes(self, dataset_id, columns, bc_id='all'):
         """
         Find the scope for each provided column and return new list of columns with scope information stored inside.
 
@@ -247,7 +271,7 @@ class Datasets(object):
         :return: New list of columns, with for each column an added `scope` property.
         :rtype list[dict]
         """
-        all_scopes = self.get_scopes(dataset_id, bc_id)
+        all_scopes = await self.get_scopes(dataset_id, bc_id)
 
         def add_scope(column: dict):
             if ('scope_id' in column) + ('representation' in column) + ('name_dataset' in column) != 1:

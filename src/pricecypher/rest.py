@@ -1,6 +1,8 @@
+import asyncio
 import json
-import requests
-from time import sleep
+import logging
+
+from aiohttp import ClientSession, ClientTimeout
 from random import randint
 from datetime import datetime
 from marshmallow import Schema
@@ -48,6 +50,7 @@ class RestClient(object):
         if options is None:
             options = RestClientOptions()
 
+        self.session = ClientSession(timeout=ClientTimeout(total=options.timeout))
         self.options = options
         self.jwt = jwt
 
@@ -59,6 +62,9 @@ class RestClient(object):
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
+
+    async def close(self):
+        await self.session.close()
 
     # Returns the maximum amount of jitter to introduce in milliseconds (100ms)
     def MAX_REQUEST_RETRY_JITTER(self):
@@ -72,7 +78,7 @@ class RestClient(object):
     def MIN_REQUEST_RETRY_DELAY(self):
         return 100
 
-    def _retry(self, make_request):
+    async def _retry(self, make_request):
         # Track the API request attempt number
         attempt = 0
 
@@ -87,91 +93,97 @@ class RestClient(object):
             attempt += 1
 
             # Issue the request
-            response = make_request()
+            response = await make_request()
 
             # break iff no retry needed
-            if response.status_code != 429 or retries <= 0 or attempt > retries:
+            if response.status != 429 or retries <= 0 or attempt > retries:
                 break
 
-            # Retry the request. Apply an exponential backoff for subsequent attempts, using this formula:
-            # max(
-            #   MIN_REQUEST_RETRY_DELAY,
-            #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
-            # )
+            # Try to find Retry After header in response, which specifies the number of seconds we should wait.
+            wait = response.headers.get('Retry-After')
 
-            # Increases base delay by (100ms * (2 ** attempt - 1))
-            wait = 100 * 2 ** (attempt - 1)
+            if wait is not None:
+                # Convert seconds to milliseconds.
+                wait = 1000 * int(wait)
+            else:
+                # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
+                # max(
+                #   MIN_REQUEST_RETRY_DELAY,
+                #   min(
+                #       MAX_REQUEST_RETRY_DELAY,
+                #       (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER)
+                #   )
+                # )
 
-            # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
-            wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
+                # Increases base delay by (100ms * (2 ** attempt - 1))
+                wait = 100 * 2 ** (attempt - 1)
 
-            # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
-            wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+                # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
+                wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
 
-            # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
-            wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
+                # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
+                wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+
+                # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
+                wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
+
+            logging.debug(f"Got 429 Too Many Attempts response, retrying in {wait} ms.")
 
             self._metrics['retries'] = attempt
             self._metrics['backoff'].append(wait)
 
             # Skip calling sleep() when running unit tests
             if self._skip_sleep is False:
-                # sleep() functions in seconds, so convert the milliseconds formula above accordingly
-                sleep(wait / 1000)
+                # sleep expects value in seconds, so convert the milliseconds formula above accordingly
+                await asyncio.sleep(wait / 1000)
 
         # Return the final Response
         return response
 
-    def get(self, url, params=None, schema: Schema = None):
+    async def get(self, url, params=None, schema: Schema = None):
         headers = self.base_headers.copy()
-        response = self._retry(lambda: requests.get(url, params=params, headers=headers, timeout=self.options.timeout))
+        response = await self._retry(lambda: self.session.get(url, params=params, headers=headers))
 
-        return self._process_response(response, schema)
+        return await self._process_response(response, schema)
 
-    def post(self, url, data=None, schema: Schema = None):
+    async def post(self, url, data=None, schema: Schema = None):
         headers = self.base_headers.copy()
-        j_data = json.dumps(data, cls=JsonEncoder)
-        response = self._retry(lambda: requests.post(url, data=j_data, headers=headers, timeout=self.options.timeout))
+        response = await self._retry(lambda: self.session.post(url, json=data, headers=headers))
 
-        return self._process_response(response, schema)
+        return await self._process_response(response, schema)
 
-    def file_post(self, url, data=None, files=None):
-        headers = self.base_headers.copy()
-        headers.pop('Content-Type', None)
-
-        response = self._retry(
-            lambda: requests.post(url, data=data, files=files, headers=headers, timeout=self.options.timeout))
-        return self._process_response(response)
-
-    def patch(self, url, data=None):
+    async def patch(self, url, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(lambda: requests.patch(url, json=data, headers=headers, timeout=self.options.timeout))
-        return self._process_response(response)
+        response = await self._retry(lambda: self.session.patch(url, json=data, headers=headers))
+        return await self._process_response(response)
 
-    def put(self, url, data=None):
+    async def put(self, url, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(lambda: requests.put(url, json=data, headers=headers, timeout=self.options.timeout))
-        return self._process_response(response)
+        response = await self._retry(lambda: self.session.put(url, json=data, headers=headers))
+        return await self._process_response(response)
 
-    def delete(self, url, params=None, data=None):
+    async def delete(self, url, params=None, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(
-            lambda: requests.delete(url, headers=headers, params=params or {}, json=data, timeout=self.options.timeout))
-        return self._process_response(response)
+        response = await self._retry(lambda: self.session.delete(url, headers=headers, params=params or {}, json=data))
+        return await self._process_response(response)
 
-    def _process_response(self, response, schema=None):
-        return self._parse(response, schema).content()
+    async def _process_response(self, response, schema=None):
+        parsed = await self._parse(response, schema)
+        return parsed.content()
 
-    def _parse(self, response, schema=None):
-        if not response.text:
-            return EmptyResponse(response.status_code)
+    async def _parse(self, response, schema=None):
         try:
-            return JsonResponse(response, schema)
+            content = await response.json()
+
+            if content is None:
+                return EmptyResponse(response.status)
+
+            return JsonResponse(content, response, schema)
         except ValueError:
-            return PlainResponse(response)
+            return PlainResponse(response, await response.text())
 
 
 class Response(object):
@@ -213,12 +225,11 @@ class JsonEncoder(json.JSONEncoder):
 
 
 class JsonResponse(Response):
-    def __init__(self, response, schema: Schema = None):
-        if schema is not None and response.status_code < 400:
-            content = schema.loads(json_data=response.text)
-        else:
-            content = json.loads(response.text)
-        super(JsonResponse, self).__init__(response.status_code, content, response.headers)
+    def __init__(self, content, response, schema: Schema = None):
+        if schema is not None and response.status < 400:
+            content = schema.load(content)
+
+        super(JsonResponse, self).__init__(response.status, content, response.headers)
 
     def _error_code(self):
         if 'errorCode' in self._content:
@@ -236,8 +247,8 @@ class JsonResponse(Response):
 
 
 class PlainResponse(Response):
-    def __init__(self, response):
-        super(PlainResponse, self).__init__(response.status_code, response.text, response.headers)
+    def __init__(self, response, text):
+        super(PlainResponse, self).__init__(response.status, text, response.headers)
 
     def _error_code(self):
         return UNKNOWN_ERROR
