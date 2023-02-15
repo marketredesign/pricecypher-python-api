@@ -6,17 +6,14 @@ from pricecypher.rest import RestClient
 class UsersEndpoint(BaseEndpoint):
     """PriceCypher endpoints in user tool.
 
-    :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:datasets' scope.
+    :param RestClient client: HTTP client for making API requests.
     :param str users_base: (optional) Base URL for PriceCypher user tool API.
         (defaults to https://users.pricecypher.com)
-    :param RestClientOptions rest_options: (optional) Set any additional options for the REST client, e.g. rate-limit.
-        (defaults to None)
     """
 
-    def __init__(self, bearer_token, users_base='https://users.pricecypher.com', rest_options=None):
+    def __init__(self, client, users_base='https://users.pricecypher.com'):
         self.base_url = users_base
-        self.bearer_token = bearer_token
-        self.client = RestClient(jwt=bearer_token, options=rest_options)
+        self.client = client
 
     def datasets(self):
         """
@@ -34,10 +31,10 @@ class DatasetsEndpoint(BaseEndpoint):
         self.client = client
         self.base_url = base
 
-    def index(self) -> list[Dataset]:
+    async def index(self) -> list[Dataset]:
         """List all available datasets the user has access to.
 
         :return: list of datasets.
         :rtype list[Dataset]
         """
-        return self.client.get(self._url(), schema=Dataset.Schema(many=True))
+        return await self.client.get(self._url(), schema=Dataset.Schema(many=True))
