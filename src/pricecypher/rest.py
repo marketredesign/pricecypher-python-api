@@ -2,7 +2,8 @@ import asyncio
 import json
 import logging
 
-from aiohttp import ClientSession, ClientTimeout
+import aiohttp
+from aiohttp import ClientSession, ClientTimeout, TCPConnector
 from random import randint
 from datetime import datetime
 from marshmallow import Schema
@@ -26,15 +27,19 @@ class RestClientOptions(object):
         (defaults to 3)
     """
 
-    def __init__(self, timeout=None, retries=None):
+    def __init__(self, timeout=None, retries=None, tcp_limit=None):
         self.timeout = 300.0
         self.retries = 3
+        self.tcp_limit = 50
 
         if timeout is not None:
             self.timeout = timeout
 
         if retries is not None:
             self.retries = retries
+
+        if tcp_limit is not None:
+            self.tcp_limit = tcp_limit
 
 
 class RestClient(object):
@@ -50,7 +55,10 @@ class RestClient(object):
         if options is None:
             options = RestClientOptions()
 
-        self.session = ClientSession(timeout=ClientTimeout(total=options.timeout))
+        timeout = ClientTimeout(total=options.timeout)
+        connector = TCPConnector(limit=options.tcp_limit)
+
+        self.session = ClientSession(timeout=timeout, connector=connector)
         self.options = options
         self.jwt = jwt
 
@@ -79,6 +87,7 @@ class RestClient(object):
         return 100
 
     async def _retry(self, make_request):
+        response = None
         # Track the API request attempt number
         attempt = 0
 
@@ -89,22 +98,31 @@ class RestClient(object):
         retries = max(0, self.options.retries)
 
         while True:
+            wait = None
             # Increment attempt number
             attempt += 1
 
             # Issue the request
-            response = await make_request()
+            try:
+                response = await make_request()
+
+                if response.status != 429:
+                    break
+
+                logging.debug('Got 429 Too Many Attempts response.')
+
+                # Try to find Retry After header in response, which specifies the number of seconds we should wait.
+                wait = response.headers.get('Retry-After')
+            except aiohttp.ClientConnectionError:
+                logging.warning("Encountered a connection error.")
 
             # break iff no retry needed
-            if response.status != 429 or retries <= 0 or attempt > retries:
+            if retries <= 0 or attempt > retries:
                 break
 
-            # Try to find Retry After header in response, which specifies the number of seconds we should wait.
-            wait = response.headers.get('Retry-After')
-
             if wait is not None:
-                # Convert seconds to milliseconds.
-                wait = 1000 * int(wait)
+                # Wait for at least 1 second and convert seconds to milliseconds.
+                wait = 1000 * (int(wait) + 1)
             else:
                 # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
                 # max(
@@ -127,7 +145,7 @@ class RestClient(object):
                 # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
                 wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
 
-            logging.debug(f"Got 429 Too Many Attempts response, retrying in {wait} ms.")
+            logging.debug(f"Retrying in {wait} ms...")
 
             self._metrics['retries'] = attempt
             self._metrics['backoff'].append(wait)
@@ -137,7 +155,7 @@ class RestClient(object):
                 # sleep expects value in seconds, so convert the milliseconds formula above accordingly
                 await asyncio.sleep(wait / 1000)
 
-        # Return the final Response
+        # Return the final response, if available.
         return response
 
     async def get(self, url, params=None, schema: Schema = None):
