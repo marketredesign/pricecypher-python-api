@@ -100,7 +100,7 @@ class RestClientOptions(object):
             self.retries = retries
 
         if 'SSL_VERIFY' in os.environ:
-            self.verify = bool(os.environ.get('SSL_VERIFY'))
+            self.verify = os.environ.get('SSL_VERIFY').lower() == 'true'
 
 
 class RestClient(object):
