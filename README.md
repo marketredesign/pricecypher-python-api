@@ -25,6 +25,20 @@ columns = [
 datasets.get_transactions(DATASET_ID, AGGREGATE, columns)
 ```
 
+### Config SDK
+```python
+from pricecypher import ConfigSections
+
+config = ConfigSections(BEARER_TOKEN, DATASET_ID)
+
+# Print available config sections
+print(config.index())
+# Print config key-value pairs for `monitoring` section.
+print(config.get_parsed_section('monitoring'))
+# Non-existent config section returns empty dict.
+print(config.get_parsed_section('nonexistent'))
+```
+
 ### Contracts
 The `Script`, `ScopeScript`, and `QualityTestScript` abstract classes can be extended with their abstract methods
 implemented to create scripts usable in other services. 
