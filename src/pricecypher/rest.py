@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import socket
 from datetime import datetime
 from random import randint
 
@@ -32,6 +33,7 @@ class RestClientOptions(object):
         self.timeout = 300.0
         self.retries = 3
         self.verify = True
+        self.nameservers = ['1.1.1.1', '8.8.8.8']  # CloudFlare & Google DNS
         self.tcp_limit = 50
 
         if timeout is not None:
@@ -42,6 +44,9 @@ class RestClientOptions(object):
 
         if 'SSL_VERIFY' in os.environ:
             self.verify = os.environ.get('SSL_VERIFY').lower() == 'true'
+
+        if 'DNS_NAMESERVERS' in os.environ:
+            self.nameservers = os.environ.get('DNS_NAMESERVERS').split(',')
 
         if tcp_limit is not None:
             self.tcp_limit = tcp_limit
@@ -60,11 +65,12 @@ class RestClient(object):
         if options is None:
             options = RestClientOptions()
 
+        tcp_lim = options.tcp_limit
         timeout = ClientTimeout(total=options.timeout)
-        resolver = AsyncResolver(nameservers=['144.119.42.13', '144.119.42.14'])
-        connector = TCPConnector(limit=options.tcp_limit, resolver=resolver, verify_ssl=options.verify)
+        resolver = AsyncResolver(nameservers=options.nameservers)
+        connector = TCPConnector(limit=tcp_lim, resolver=resolver, verify_ssl=options.verify, family=socket.AF_INET)
 
-        self.session = ClientSession(timeout=timeout, connector=connector)
+        self.session = ClientSession(timeout=timeout, connector=connector, trust_env=True)
         self.options = options
         self.jwt = jwt
 
