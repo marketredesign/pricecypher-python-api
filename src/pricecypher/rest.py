@@ -1,11 +1,12 @@
 import asyncio
 import json
 import logging
+import os
+from datetime import datetime
+from random import randint
 
 import aiohttp
-from aiohttp import ClientSession, ClientTimeout, TCPConnector
-from random import randint
-from datetime import datetime
+from aiohttp import ClientSession, ClientTimeout, TCPConnector, AsyncResolver
 from marshmallow import Schema
 
 from .exceptions import PriceCypherError, RateLimitError
@@ -30,6 +31,7 @@ class RestClientOptions(object):
     def __init__(self, timeout=None, retries=None, tcp_limit=None):
         self.timeout = 300.0
         self.retries = 3
+        self.verify = True
         self.tcp_limit = 50
 
         if timeout is not None:
@@ -37,6 +39,9 @@ class RestClientOptions(object):
 
         if retries is not None:
             self.retries = retries
+
+        if 'SSL_VERIFY' in os.environ:
+            self.verify = os.environ.get('SSL_VERIFY').lower() == 'true'
 
         if tcp_limit is not None:
             self.tcp_limit = tcp_limit
@@ -56,7 +61,8 @@ class RestClient(object):
             options = RestClientOptions()
 
         timeout = ClientTimeout(total=options.timeout)
-        connector = TCPConnector(limit=options.tcp_limit)
+        resolver = AsyncResolver(nameservers=['144.119.42.13', '144.119.42.14'])
+        connector = TCPConnector(limit=options.tcp_limit, resolver=resolver, verify_ssl=options.verify)
 
         self.session = ClientSession(timeout=timeout, connector=connector)
         self.options = options
