@@ -1,6 +1,7 @@
 from dataclasses import field
 from datetime import datetime
 from typing import Optional, List, Union
+
 from marshmallow import EXCLUDE
 from marshmallow_dataclass import dataclass
 
@@ -23,6 +24,7 @@ class Scope:
     class Meta:
         name = "scope"
         plural_name = "scopes"
+        unknown = EXCLUDE
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)
@@ -34,6 +36,7 @@ class ScopeValue:
     class Meta:
         name = "scope_value"
         plural_name = "scope_values"
+        unknown = EXCLUDE
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)
@@ -44,6 +47,7 @@ class TransactionSummary:
     class Meta:
         name = "summary"
         plural_name = "summaries"
+        unknown = EXCLUDE
 
 
 @dataclass(frozen=True)
@@ -51,12 +55,18 @@ class ScopeValueTransaction:
     scope_id: int
     value: Optional[str]
 
+    class Meta:
+        unknown = EXCLUDE
+
 
 @dataclass(frozen=True)
 class ScopeConstantTransaction:
     scope_id: int
     constant: Union[str, float, None]
     volume_multiplied_constant: Optional[Union[str, float, None]]
+
+    class Meta:
+        unknown = EXCLUDE
 
 
 @dataclass(frozen=True)
@@ -71,6 +81,9 @@ class Transaction:
     unit: Optional[str]
     scope_values: List[ScopeValueTransaction]
     scope_constants: List[ScopeConstantTransaction]
+
+    class Meta:
+        unknown = EXCLUDE
 
     def to_dict(self, scope_keys):
         dic = {
