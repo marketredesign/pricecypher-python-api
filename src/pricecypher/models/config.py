@@ -16,6 +16,7 @@ class ConfigSection:
     class Meta:
         name = "section"
         plural_name = "sections"
+        unknown = EXCLUDE
 
 
 @dataclass(frozen=True)
