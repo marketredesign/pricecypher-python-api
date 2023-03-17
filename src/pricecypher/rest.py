@@ -1,10 +1,11 @@
-import os
 import json
+import os
 import socket
-import requests
-from time import sleep
-from random import randint
 from datetime import datetime
+from random import randint
+from time import sleep
+
+import requests
 from marshmallow import Schema, EXCLUDE
 
 from .exceptions import PriceCypherError, RateLimitError
@@ -157,27 +158,37 @@ class RestClient(object):
             # Issue the request
             response = make_request()
 
-            # break iff no retry needed
-            if response.status_code != 429 or retries <= 0 or attempt > retries:
+            if response.status_code != 429:
                 break
 
-            # Retry the request. Apply an exponential backoff for subsequent attempts, using this formula:
-            # max(
-            #   MIN_REQUEST_RETRY_DELAY,
-            #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
-            # )
+            # Try to find Retry After header in response, which specifies the number of seconds we should wait.
+            wait = response.headers.get('Retry-After')
 
-            # Increases base delay by (100ms * (2 ** attempt - 1))
-            wait = 100 * 2 ** (attempt - 1)
+            # break iff no retry needed
+            if retries <= 0 or attempt > retries:
+                break
 
-            # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
-            wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
+            if wait is not None:
+                # Wait for 3 seconds more than how long we should wait, just to be sure.
+                wait = 1000 * (int(wait) + 3)
+            else:
+                # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
+                # max(
+                #   MIN_REQUEST_RETRY_DELAY,
+                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
+                # )
 
-            # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
-            wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+                # Increases base delay by (100ms * (2 ** attempt - 1))
+                wait = 100 * 2 ** (attempt - 1)
 
-            # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
-            wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
+                # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
+                wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
+
+                # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
+                wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+
+                # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
+                wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
 
             self._metrics['retries'] = attempt
             self._metrics['backoff'].append(wait)
