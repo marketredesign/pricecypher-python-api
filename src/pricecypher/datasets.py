@@ -194,6 +194,11 @@ class Datasets(object):
         # Add filters specified in parameters 
         filters.extend(filters_additional)
 
+        # Keep only unique values of scope value ids
+        # In case a filter was added in the filter_scopes param
+        # that already existed in the columns list
+        filters = list(set(filters))
+
         # Find all aggregation methods to be sent to the dataset service.
         aggregation_methods = self._find_aggregation_methods(columns_with_scopes)
 
