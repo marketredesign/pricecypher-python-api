@@ -136,6 +136,7 @@ class Datasets(object):
         start_date_time=None,
         end_date_time=None,
         bc_id='all',
+        filter_scopes=[],
         intake_status=None,
         filter_transaction_ids=None,
     ):
@@ -157,6 +158,8 @@ class Datasets(object):
         :param datetime end_date_time: When specified, only transactions before this date are considered.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
+        :param list[dict] filter_scopes (optional): When specified, filters for the menioned scope and scope values are 
+            applied to the transactions.
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
         :return: Dataframe of transactions.
@@ -176,6 +179,21 @@ class Datasets(object):
         ]
         # Find all scope value filters to be sent to the dataset service.
         filters = self._find_scope_value_filters(columns_with_values)
+
+        # If additional filters for scopes that may not be added to the transactions
+        # are sepcified, get the scope_value_id for the scope_id and scope_values
+        # and extend the filters list
+        scope_ids_to_be_filtered = [scope['scope_id'] for scope in filter_scopes]
+        scope_values_to_be_filtered = [scope['values'] for scope in filter_scopes]
+
+        filters_additional = []
+
+        for id, values in zip(scope_ids_to_be_filtered, scope_values_to_be_filtered):
+            filters_additional.extend(self.get_scope_values(dataset_id, id).where_in(values).pluck('id'))
+
+        # Add filters specified in parameters 
+        filters.extend(filters_additional)
+
         # Find all aggregation methods to be sent to the dataset service.
         aggregation_methods = self._find_aggregation_methods(columns_with_scopes)
 
