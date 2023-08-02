@@ -254,7 +254,7 @@ class Datasets(object):
         for id, values in zip(scope_ids_to_be_filtered, scope_values_to_be_filtered):
             filters_additional.extend(self.get_scope_values(dataset_id, id).where_in(values).pluck('id'))
 
-        # Add filters specified in parameters 
+        # Extend the existing list of scope value filters with additional 
         filters.extend(filters_additional)
 
         return filters
