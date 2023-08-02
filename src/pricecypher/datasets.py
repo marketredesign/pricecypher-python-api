@@ -246,9 +246,6 @@ class Datasets(object):
         that need to be filtered on.
         :rtype list
         """
-        # If additional filters for scopes that may not be added to the transactions
-        # are specified, get the scope_value_id for the scope_id and scope_values
-        # and extend the filters list
         scope_ids_to_be_filtered = [scope['scope_id'] for scope in filter_scopes]
         scope_values_to_be_filtered = [scope['values'] for scope in filter_scopes]
 
