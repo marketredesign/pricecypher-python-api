@@ -158,7 +158,7 @@ class Datasets(object):
         :param datetime end_date_time: When specified, only transactions before this date are considered.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
-        :param list[dict] filter_scopes (optional): When specified, filters for the menioned scope and scope values are 
+        :param list[dict] filter_scopes (optional): When specified, filters for the menitoned scope and scope values are 
             applied to the transactions.
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
@@ -180,19 +180,8 @@ class Datasets(object):
         # Find all scope value filters to be sent to the dataset service.
         filters = self._find_scope_value_filters(columns_with_values)
 
-        # If additional filters for scopes that may not be added to the transactions
-        # are specified, get the scope_value_id for the scope_id and scope_values
-        # and extend the filters list
-        scope_ids_to_be_filtered = [scope['scope_id'] for scope in filter_scopes]
-        scope_values_to_be_filtered = [scope['values'] for scope in filter_scopes]
-
-        filters_additional = []
-
-        for id, values in zip(scope_ids_to_be_filtered, scope_values_to_be_filtered):
-            filters_additional.extend(self.get_scope_values(dataset_id, id).where_in(values).pluck('id'))
-
-        # Add filters specified in parameters 
-        filters.extend(filters_additional)
+        # Add all scope value ids for additional filters and extend to the existing list.
+        filters = self._add_scope_values_for_additional_filters(filters, filter_scopes, dataset_id)
 
         # Keep only unique values of scope value ids
         # In case a filter was added in the filter_scopes param
@@ -242,6 +231,36 @@ class Datasets(object):
 
         # Map transactions to dicts based on the provided column keys and convert to pandas dataframe.
         return DataFrame.from_records([t.to_dict(scope_keys) for t in transactions])
+
+    def _add_scope_values_for_additional_filters(self, filters, filter_scopes, dataset_id):
+        """
+        If additional filters for scopes that may not be added to the transactions
+        are specified, get the scope_value_id for the scope_id and scope_values
+        and extend the filters list
+        :param list filters: business cell ID.
+            (defaults to 'all')
+        :param list[dict] filter_scopes: filters for the mentioned scope and scope values 
+            to be applied to the transactions
+        :param int dataset_id: Dataset to retrieve scopes for
+        :return: New list of filters, extended with scope value ids 
+        that need to be filtered on.
+        :rtype list
+        """
+        # If additional filters for scopes that may not be added to the transactions
+        # are specified, get the scope_value_id for the scope_id and scope_values
+        # and extend the filters list
+        scope_ids_to_be_filtered = [scope['scope_id'] for scope in filter_scopes]
+        scope_values_to_be_filtered = [scope['values'] for scope in filter_scopes]
+
+        filters_additional = []
+
+        for id, values in zip(scope_ids_to_be_filtered, scope_values_to_be_filtered):
+            filters_additional.extend(self.get_scope_values(dataset_id, id).where_in(values).pluck('id'))
+
+        # Add filters specified in parameters 
+        filters.extend(filters_additional)
+
+        return filters
 
     def _add_scopes(self, dataset_id, columns, bc_id='all'):
         """
