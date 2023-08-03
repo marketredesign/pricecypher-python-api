@@ -158,7 +158,7 @@ class Datasets(object):
         :param datetime end_date_time: When specified, only transactions before this date are considered.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
-        :param list[dict] filter_scopes (optional): When specified, filters for the menitoned scope and scope values are 
+        :param list[dict] filter_scopes: (optional) When specified, filters for the mentioned scope and scope values are
             applied to the transactions.
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
