@@ -5,7 +5,7 @@ import requests
 from time import sleep
 from random import randint
 from datetime import datetime
-from marshmallow import Schema
+from marshmallow import Schema, EXCLUDE
 
 from .exceptions import PriceCypherError, RateLimitError
 
@@ -301,7 +301,7 @@ class JsonEncoder(json.JSONEncoder):
 class JsonResponse(Response):
     def __init__(self, response, schema: Schema = None):
         if schema is not None and response.status_code < 400:
-            content = schema.loads(json_data=response.text)
+            content = schema.loads(json_data=response.text, unknown=EXCLUDE)
         else:
             content = json.loads(response.text)
         super(JsonResponse, self).__init__(response.status_code, content, response.headers)
