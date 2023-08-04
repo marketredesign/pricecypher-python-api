@@ -9,6 +9,7 @@ class ConfigSections(object):
     retrieving the key-value pairs of a section and parsing it to a dictionary.
 
     :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:configuration' scope.
+    :param int dataset_id: Dataset that is queried by these config operations.
     :param str config_base: (optional) Base URL for PriceCypher config service API.
         (defaults to the static default_config_base, which by default is https://config.pricecypher.com)
     :param RestClientOptions rest_options: (optional) Set any additional options for the REST client, e.g. rate-limit.
