@@ -63,20 +63,32 @@ class ScopesEndpoint(BaseEndpoint):
         self.client = client
         self.base_url = base
 
-    def index(self):
+    def index(self, intake_status=None):
         """
         Show a list of all scopes of the dataset.
+        :param intake_status: (Optional) intake status to fetch the scopes for.
         :rtype: list[Scope]
         """
-        return self.client.get(self._url(), schema=Scope.Schema(many=True))
+        params = {}
+        if intake_status is not None:
+            # NB: DSS does not (yet) use this parameter, but we send it already for a future release.
+            params['intake_status'] = intake_status
+        return self.client.get(self._url(), params=params, schema=Scope.Schema(many=True))
 
-    def scope_values(self, scope_id):
+    def scope_values(self, scope_id, intake_status=None):
         """
         Get all scope values for the given scope of the dataset.
         :param scope_id: Scope to get scope values for.
+        :param intake_status: (Optional) intake status to fetch the scope values for.
         :rtype: list[ScopeValue]
         """
-        return self.client.get(self._url([scope_id, 'scope_values']), schema=ScopeValue.Schema(many=True))
+        url = self._url([scope_id, 'scope_values'])
+        params = {}
+
+        if intake_status is not None:
+            params['intake_status'] = intake_status
+
+        return self.client.get(url, params=params, schema=ScopeValue.Schema(many=True))
 
 
 class TransactionsEndpoint(BaseEndpoint):

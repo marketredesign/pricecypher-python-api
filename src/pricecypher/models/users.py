@@ -1,6 +1,8 @@
 from dataclasses import field
 from datetime import datetime
 from typing import Optional
+
+from marshmallow import EXCLUDE
 from marshmallow_dataclass import dataclass
 
 from pricecypher.models.namespaced_schema import NamespacedSchema
@@ -18,3 +20,4 @@ class Dataset:
     class Meta:
         name = "dataset"
         plural_name = "datasets"
+        unknown = EXCLUDE

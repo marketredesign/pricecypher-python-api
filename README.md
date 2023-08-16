@@ -25,6 +25,20 @@ columns = [
 datasets.get_transactions(DATASET_ID, AGGREGATE, columns)
 ```
 
+### Config SDK
+```python
+from pricecypher import ConfigSections
+
+config = ConfigSections(BEARER_TOKEN, DATASET_ID)
+
+# Print available config sections
+print(config.index())
+# Print config key-value pairs for `monitoring` section.
+print(config.get_parsed_section('monitoring'))
+# Non-existent config section returns empty dict.
+print(config.get_parsed_section('nonexistent'))
+```
+
 ### Contracts
 The `Script`, `ScopeScript`, and `QualityTestScript` abstract classes can be extended with their abstract methods
 implemented to create scripts usable in other services. 
@@ -35,6 +49,15 @@ The `QualityTestScript` is intended for scripts that check the quality of a data
 output that can be visualized and/or used by other services.
 
 See the documentation on the abstract functions for further specifics.
+
+### Environment variables
+
+| Variable          | Description                                                                |
+|-------------------|----------------------------------------------------------------------------|
+| CUSTOM_DNS_DOMAIN | Use for custom domain resolution of (wildcard) domain to `$CUSTOM_DNS_IP`. |
+| CUSTOM_DNS_IP     | IP address the `CUSTOM_DNS_DOMAIN` should resolve to.                      |
+| SSL_VERIFY        | Boolean value to specify whether SSL certificates should be verified.      |
+
 
 ## Development
 

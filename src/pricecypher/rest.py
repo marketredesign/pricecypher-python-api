@@ -1,13 +1,78 @@
 import json
-import requests
-from time import sleep
-from random import randint
+import os
+import socket
 from datetime import datetime
-from marshmallow import Schema
+from random import randint
+from time import sleep
+
+import requests
+from marshmallow import Schema, EXCLUDE
 
 from .exceptions import PriceCypherError, RateLimitError
 
 UNKNOWN_ERROR = 'pricecypher.sdk.internal.unknown'
+
+# Mapping from (wildcard) domains to IP addresses to resolve manually.
+dns_cache = {}
+# Keep track of original getaddrinfo function to use for domain names not in our custom cache.
+prv_getaddrinfo = socket.getaddrinfo
+
+
+def is_ipv4(s):
+    """ Check whether the given address is an IPv4 address. """
+    return ':' not in s
+
+
+def add_custom_dns(domain, port, ip):
+    """
+    Add a custom DNS record to our local cache, such that requests for the given domain and port are resolved to the
+    given ip address.
+    ."""
+    # See docs for tuple format: https://docs.python.org/2/library/socket.html#socket.getaddrinfo
+    if is_ipv4(ip):
+        value = (socket.AddressFamily.AF_INET, 1, 6, '', (ip, port))
+    else:  # ipv6
+        value = (socket.AddressFamily.AF_INET6, 1, 6, '', (ip, port, 0, 0))
+
+    dns_cache[domain] = [value]
+
+
+def new_getaddrinfo(*args):
+    """
+    Define a patched function that will replace the original `socket.getaddrinfo` function.
+    This patched function will first check if the given host or its wildcard host is included in our local cache.
+    If so, it resolves the address to the custom IP in our cache. Otherwise, the original getaddrinfo is used instead.
+    """
+    # Find host in given arguments and split it into parts.
+    host = args[0]
+    host_parts = host.split('.')
+
+    if len(host_parts) < 1:
+        return prv_getaddrinfo(*args)
+
+    # Replace first part of domain with * such that we can also look for the wildcard host in our local cache.
+    host_parts[0] = '*'
+    host_wildcard = '.'.join(host_parts)
+
+    try:
+        # Try to find original host in cache first, if not present also try to find its wildcard version.
+        return dns_cache.get(host, False) or dns_cache[host_wildcard]
+    except KeyError:
+        # If both the given host and its wildcard version are not present in cache, fallback to original function.
+        return prv_getaddrinfo(*args)
+
+
+# Patch the getaddrinfo function to use our local cache iff custom overwrite environment variables are set.
+if 'CUSTOM_DNS_DOMAIN' in os.environ and 'CUSTOM_DNS_IP' in os.environ:
+    # Patch getaddrinfo function.
+    socket.getaddrinfo = new_getaddrinfo
+    # Find the custom domain and IP to set in cache.
+    custom_domain = os.environ.get('CUSTOM_DNS_DOMAIN')
+    custom_ip = os.environ.get('CUSTOM_DNS_IP')
+
+    # Add custom DNS rules to our local cache.
+    add_custom_dns(custom_domain, 80, custom_ip)
+    add_custom_dns(custom_domain, 443, custom_ip)
 
 
 class RestClientOptions(object):
@@ -27,12 +92,16 @@ class RestClientOptions(object):
     def __init__(self, timeout=None, retries=None):
         self.timeout = 300.0
         self.retries = 3
+        self.verify = True
 
         if timeout is not None:
             self.timeout = timeout
 
         if retries is not None:
             self.retries = retries
+
+        if 'SSL_VERIFY' in os.environ:
+            self.verify = os.environ.get('SSL_VERIFY').lower() == 'true'
 
 
 class RestClient(object):
@@ -89,27 +158,37 @@ class RestClient(object):
             # Issue the request
             response = make_request()
 
-            # break iff no retry needed
-            if response.status_code != 429 or retries <= 0 or attempt > retries:
+            if response.status_code != 429:
                 break
 
-            # Retry the request. Apply an exponential backoff for subsequent attempts, using this formula:
-            # max(
-            #   MIN_REQUEST_RETRY_DELAY,
-            #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
-            # )
+            # Try to find Retry After header in response, which specifies the number of seconds we should wait.
+            wait = response.headers.get('Retry-After')
 
-            # Increases base delay by (100ms * (2 ** attempt - 1))
-            wait = 100 * 2 ** (attempt - 1)
+            # break iff no retry needed
+            if retries <= 0 or attempt > retries:
+                break
 
-            # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
-            wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
+            if wait is not None:
+                # Wait for 3 seconds more than how long we should wait, just to be sure.
+                wait = 1000 * (int(wait) + 3)
+            else:
+                # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
+                # max(
+                #   MIN_REQUEST_RETRY_DELAY,
+                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
+                # )
 
-            # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
-            wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+                # Increases base delay by (100ms * (2 ** attempt - 1))
+                wait = 100 * 2 ** (attempt - 1)
 
-            # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
-            wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
+                # Introduces jitter to the base delay; increases delay between 1ms to MAX_REQUEST_RETRY_JITTER (100ms)
+                wait += randint(1, self.MAX_REQUEST_RETRY_JITTER())
+
+                # Is never more than MAX_REQUEST_RETRY_DELAY (1s)
+                wait = min(self.MAX_REQUEST_RETRY_DELAY(), wait)
+
+                # Is never less than MIN_REQUEST_RETRY_DELAY (100ms)
+                wait = max(self.MIN_REQUEST_RETRY_DELAY(), wait)
 
             self._metrics['retries'] = attempt
             self._metrics['backoff'].append(wait)
@@ -124,14 +203,20 @@ class RestClient(object):
 
     def get(self, url, params=None, schema: Schema = None):
         headers = self.base_headers.copy()
-        response = self._retry(lambda: requests.get(url, params=params, headers=headers, timeout=self.options.timeout))
+        response = self._retry(lambda: requests.get(
+            url,
+            params=params, headers=headers, timeout=self.options.timeout, verify=self.options.verify
+        ))
 
         return self._process_response(response, schema)
 
     def post(self, url, data=None, schema: Schema = None):
         headers = self.base_headers.copy()
         j_data = json.dumps(data, cls=JsonEncoder)
-        response = self._retry(lambda: requests.post(url, data=j_data, headers=headers, timeout=self.options.timeout))
+        response = self._retry(lambda: requests.post(
+            url,
+            data=j_data, headers=headers, timeout=self.options.timeout, verify=self.options.verify
+        ))
 
         return self._process_response(response, schema)
 
@@ -139,27 +224,39 @@ class RestClient(object):
         headers = self.base_headers.copy()
         headers.pop('Content-Type', None)
 
-        response = self._retry(
-            lambda: requests.post(url, data=data, files=files, headers=headers, timeout=self.options.timeout))
+        response = self._retry(lambda: requests.post(
+            url,
+            data=data, files=files, headers=headers, timeout=self.options.timeout, verify=self.options.verify
+        ))
         return self._process_response(response)
 
     def patch(self, url, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(lambda: requests.patch(url, json=data, headers=headers, timeout=self.options.timeout))
+        response = self._retry(lambda: requests.patch(
+            url,
+            json=data, headers=headers, timeout=self.options.timeout, verify=self.options.verify
+        ))
         return self._process_response(response)
 
     def put(self, url, data=None):
         headers = self.base_headers.copy()
 
-        response = self._retry(lambda: requests.put(url, json=data, headers=headers, timeout=self.options.timeout))
+        response = self._retry(lambda: requests.put(
+            url,
+            json=data, headers=headers, timeout=self.options.timeout, verify=self.options.verify
+        ))
         return self._process_response(response)
 
     def delete(self, url, params=None, data=None):
         headers = self.base_headers.copy()
+        params = params or {}
 
         response = self._retry(
-            lambda: requests.delete(url, headers=headers, params=params or {}, json=data, timeout=self.options.timeout))
+            lambda: requests.delete(
+                url,
+                headers=headers, params=params, json=data, timeout=self.options.timeout, verify=self.options.verify
+            ))
         return self._process_response(response)
 
     def _process_response(self, response, schema=None):
@@ -215,7 +312,7 @@ class JsonEncoder(json.JSONEncoder):
 class JsonResponse(Response):
     def __init__(self, response, schema: Schema = None):
         if schema is not None and response.status_code < 400:
-            content = schema.loads(json_data=response.text)
+            content = schema.loads(json_data=response.text, unknown=EXCLUDE)
         else:
             content = json.loads(response.text)
         super(JsonResponse, self).__init__(response.status_code, content, response.headers)
