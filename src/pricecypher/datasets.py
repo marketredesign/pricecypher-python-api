@@ -74,24 +74,27 @@ class Datasets(object):
         """
         return next((d for d in self.index() if d.id == dataset_id), None)
 
-    def get_scopes(self, dataset_id, bc_id='all'):
+    def get_scopes(self, dataset_id, bc_id='all', intake_status=None):
         """
         Get all scopes for the given dataset.
 
         :param int dataset_id: Dataset to retrieve scopes for.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
+        :param str intake_status: (Optional) If specified, the scopes are fetched of the last intake with this status.
         :return: Collection of scopes for the given dataset.
         :rtype: ScopeCollection
         """
+        if intake_status is None:
+            intake_status = self.default_dss_intake_status
         return ScopeCollection(
             DatasetsEndpoint(self._bearer, dataset_id, self._get_dss_base(dataset_id), self._rest_options)
             .business_cell(bc_id)
             .scopes()
-            .index()
+            .index(intake_status)
         )
 
-    def get_scope_values(self, dataset_id, scope_id, bc_id='all'):
+    def get_scope_values(self, dataset_id, scope_id, bc_id='all', intake_status=None):
         """
         Get all scopes values for the given scope within the given dataset.
 
@@ -99,15 +102,18 @@ class Datasets(object):
         :param int scope_id: Scope to retrieve scope values for.
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
+        :param str intake_status: (Optional) If specified, the values are fetched of the last intake with this status.
         :return: Collection of scope values for the given scope within the given dataset.
         :rtype: ScopeValueCollection
         """
+        if intake_status is None:
+            intake_status = self.default_dss_intake_status
         dss_base = self._get_dss_base(dataset_id)
         return ScopeValueCollection(
             DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options)
             .business_cell(bc_id)
             .scopes()
-            .scope_values(scope_id)
+            .scope_values(scope_id, intake_status)
         )
 
     def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None):
