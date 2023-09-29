@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Annotated
+from typing import Any, Optional, Annotated, Callable
 
 
 class Script(ABC):
@@ -43,14 +43,19 @@ class Script(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def execute(self, business_cell_id: Optional[int], bearer_token: str, user_input: dict[Any: Any]) -> Any:
+    def execute(
+        self,
+        business_cell_id: Optional[int],
+        get_bearer_token: Callable[[], str],
+        user_input: dict[Any: Any],
+    ) -> Any:
         """
         Execute the script
 
         NB: All required config and scopes are assumed to be present.
 
         :param business_cell_id: Business cell to execute the script for, or None if running the script for all.
-        :param bearer_token: Bearer token to use for additional requests.
+        :param get_bearer_token: Function that can be invoked to retrieve an access token.
         :param user_input: Dictionary of additional json-serializable input provided by the caller of the script.
         :return: Any json-serializable results the script outputs.
         """
