@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any
+from typing import Optional, Any, Callable
 
 from pricecypher.contracts import Script, TestSuite
 
@@ -11,16 +11,16 @@ class QualityTestScript(Script, ABC):
         used in a generalized yet controlled setting.
     """
 
-    def execute(self, business_cell_id: Optional[int], bearer_token: str, user_input: dict[Any: Any]) -> Any:
-        return self.execute_tests(business_cell_id, bearer_token)
+    def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str], user_input: dict[Any: Any]) -> Any:
+        return self.execute_tests(business_cell_id, get_bearer_token)
 
     @abstractmethod
-    def execute_tests(self, business_cell_id: Optional[int], bearer_token: str) -> TestSuite:
+    def execute_tests(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str]) -> TestSuite:
         """
         Execute the script to calculate the values of some scope for the given transactions.
 
         :param business_cell_id: Business cell to execute the script for, or None if running the script for all.
-        :param bearer_token: Bearer token to use for additional requests.
+        :param get_bearer_token: Function that can be invoked to retrieve an access token.
         :return: List of all test results that were performed by the test script.
         """
         raise NotImplementedError
