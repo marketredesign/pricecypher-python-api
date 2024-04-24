@@ -138,6 +138,7 @@ class Datasets(object):
     def get_transactions(
         self,
         dataset_id,
+        dataset_environment,
         aggregate,
         columns,
         start_date_time=None,
@@ -152,6 +153,7 @@ class Datasets(object):
         parameter. The desired columns, as well as filters and aggregation methods, can be specified.
 
         :param int dataset_id: Dataset to retrieve transactions for.
+        :param param dataset_environment: Dataset environment to retrieve transactions for.
         :param bool aggregate: If true, the transactions will be grouped on all categorical columns that have no
             aggregation method specified.
         :param list columns: Desired columns in the resulting dataframe. Each column must be a dict. Each column must
@@ -201,6 +203,7 @@ class Datasets(object):
         request_data = {
             'aggregate': aggregate,
             'select_scopes': select_scopes,
+            'dataset_environment': dataset_environment,
         }
 
         # Attach the intake status if specified
