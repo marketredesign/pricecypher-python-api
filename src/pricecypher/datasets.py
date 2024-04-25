@@ -146,12 +146,16 @@ class Datasets(object):
         filters=[],
         intake_status=None,
         filter_transaction_ids=None,
+        dataset_environment=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
         parameter. The desired columns, as well as filters and aggregation methods, can be specified.
 
         :param int dataset_id: Dataset to retrieve transactions for.
+        :param param dataset_environment: Key specifying the "environment" of the underlying data intake to query. 
+            Use `None` (the default) to query transactions from the latest intake, regardless of the associated 
+            environment with that intake.
         :param bool aggregate: If true, the transactions will be grouped on all categorical columns that have no
             aggregation method specified.
         :param list columns: Desired columns in the resulting dataframe. Each column must be a dict. Each column must
@@ -228,6 +232,10 @@ class Datasets(object):
             request_data['end_date_time'] = end_date_time
         elif end_date_time is not None:
             raise ValueError('end_date_time should be an instance of datetime.')
+
+        # Attach the dataset environment if specified
+        if dataset_environment is not None:
+            request_data['environment'] = dataset_environment
 
         # Fetch transactions from the dataset service.
         transactions = DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
