@@ -203,7 +203,7 @@ class Datasets(object):
         request_data = {
             'aggregate': aggregate,
             'select_scopes': select_scopes,
-            'dataset_environment': dataset_environment,
+            'environment': dataset_environment,
         }
 
         # Attach the intake status if specified
