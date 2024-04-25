@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 (pricecypher_python_sdk)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="pricecypher_python_sdk" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
