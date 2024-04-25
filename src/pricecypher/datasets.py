@@ -205,7 +205,6 @@ class Datasets(object):
         request_data = {
             'aggregate': aggregate,
             'select_scopes': select_scopes,
-            'environment': dataset_environment,
         }
 
         # Attach the intake status if specified
