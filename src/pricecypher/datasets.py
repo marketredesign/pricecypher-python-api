@@ -138,7 +138,6 @@ class Datasets(object):
     def get_transactions(
         self,
         dataset_id,
-        dataset_environment,
         aggregate,
         columns,
         start_date_time=None,
@@ -147,6 +146,7 @@ class Datasets(object):
         filters=[],
         intake_status=None,
         filter_transaction_ids=None,
+        dataset_environment=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
@@ -233,6 +233,10 @@ class Datasets(object):
             request_data['end_date_time'] = end_date_time
         elif end_date_time is not None:
             raise ValueError('end_date_time should be an instance of datetime.')
+
+        # Attach the dataset environment if specified
+        if dataset_environment is not None:
+            request_data['environment'] = dataset_environment
 
         # Fetch transactions from the dataset service.
         transactions = DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
