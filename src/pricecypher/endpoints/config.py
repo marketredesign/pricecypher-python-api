@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pricecypher.endpoints.base_endpoint import BaseEndpoint
-from pricecypher.exceptions import PriceCypherError
+from pricecypher.exceptions import HttpException
 from pricecypher.models import ConfigSection, ConfigSectionWithKeys
 
 
@@ -52,7 +52,7 @@ class SectionsEndpoint(BaseEndpoint):
         """
         try:
             return self.client.get(self._url(section_key), schema=ConfigSectionWithKeys.Schema(many=False))
-        except PriceCypherError as e:
+        except HttpException as e:
             if e.status_code == 404:
                 return None
             else:

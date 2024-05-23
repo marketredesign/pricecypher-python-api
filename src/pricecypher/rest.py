@@ -8,7 +8,7 @@ from time import sleep
 import requests
 from marshmallow import Schema, EXCLUDE
 
-from .exceptions import PriceCypherError, RateLimitError
+from .exceptions import RateLimitError, HttpException
 
 UNKNOWN_ERROR = 'pricecypher.sdk.internal.unknown'
 
@@ -281,13 +281,9 @@ class Response(object):
         if self._is_error():
             if self._status_code == 429:
                 reset_at = int(self._headers.get('x-ratelimit-reset', '-1'))
-                raise RateLimitError(error_code=self._error_code(),
-                                     message=self._error_message(),
-                                     reset_at=reset_at)
+                raise RateLimitError(self._error_message(), error_code=self._error_code(), reset_at=reset_at)
 
-            raise PriceCypherError(status_code=self._status_code,
-                                   error_code=self._error_code(),
-                                   message=self._error_message())
+            raise HttpException(self._error_message(), status_code=self._status_code, error_code=self._error_code())
         else:
             return self._content
 
