@@ -3,7 +3,7 @@ import pbr.version
 from .collections.scope_collection import ScopeCollection
 from .collections.scope_value_collection import ScopeValueCollection
 from .config_sections import ConfigSections
-from .contracts import InferenceScript, QualityTestScript, ScopeScript, Script
+from .contracts import *
 from .datasets import Datasets
 from .exceptions import RateLimitError, HttpException, PriceCypherError
 from .oidc import AccessTokenGrantType, AccessTokenGenerator
