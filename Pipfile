@@ -11,12 +11,12 @@ oic = "~=1.7.0"
 pandas = ">=1.4"
 requests = "~=2.14"
 typeguard = ">=2.13"
+pbr = "~=6.0"
 
 [dev-packages]
 build = "~=1.2"
 flake8 = "~=7.0"
 mock = "~=5.1"
-pbr = "~=6.0"
 setuptools = "~=70.0"
 twine = "~=5.1"
 
