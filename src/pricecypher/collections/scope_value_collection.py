@@ -1,5 +1,5 @@
-from pricecypher.collections.base_collection import BaseCollection
 from pricecypher.models import ScopeValue
+from .base_collection import BaseCollection
 
 
 class ScopeValueCollection(BaseCollection):

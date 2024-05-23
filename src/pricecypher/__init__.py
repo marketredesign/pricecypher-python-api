@@ -1,5 +1,7 @@
 import pbr.version
 
+from .collections.scope_collection import ScopeCollection
+from .collections.scope_value_collection import ScopeValueCollection
 from .config_sections import ConfigSections
 from .datasets import Datasets
 

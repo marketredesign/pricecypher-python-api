@@ -2,8 +2,9 @@ from datetime import datetime
 
 from pandas import DataFrame
 
-from pricecypher.collections import ScopeCollection, ScopeValueCollection
 from pricecypher.endpoints import DatasetsEndpoint, UsersEndpoint
+from .collections.scope_collection import ScopeCollection
+from .collections.scope_value_collection import ScopeValueCollection
 
 
 class Datasets(object):
