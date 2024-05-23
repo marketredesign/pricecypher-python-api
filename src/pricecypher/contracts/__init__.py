@@ -1,3 +1,4 @@
+from .BaseHandler import BaseHandler
 from .InferenceHandler import InferenceHandler
 from .QualityTestScript import QualityTestScript
 from .ScopeScript import ScopeScript
