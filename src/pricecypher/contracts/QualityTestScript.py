@@ -11,7 +11,8 @@ class QualityTestScript(Script, ABC):
         used in a generalized yet controlled setting.
     """
 
-    def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str], user_input: dict[Any: Any]) -> Any:
+    def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str],
+                user_input: dict[Any: Any]) -> Any:
         return self.execute_tests(business_cell_id, get_bearer_token)
 
     @abstractmethod
