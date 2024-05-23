@@ -1,2 +1,2 @@
-from PredictResult import *
+from .PredictResult import *
 from .TestResult import *
