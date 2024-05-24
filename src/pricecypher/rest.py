@@ -175,8 +175,8 @@ class RestClient(object):
                 # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
                 # max(
                 #   MIN_REQUEST_RETRY_DELAY,
-                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
-                # )
+                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_bet(1, MAX_REQUEST_RETRY_JITTER))
+                # )`
 
                 # Increases base delay by (100ms * (2 ** attempt - 1))
                 wait = 100 * 2 ** (attempt - 1)
@@ -279,11 +279,13 @@ class Response(object):
 
     def content(self):
         if self._is_error():
+            msg = self._error_message()
+
             if self._status_code == 429:
                 reset_at = int(self._headers.get('x-ratelimit-reset', '-1'))
-                raise RateLimitError(self._error_message(), error_code=self._error_code(), reset_at=reset_at)
+                raise RateLimitError(message=msg, error_code=self._error_code(), reset_at=reset_at)
 
-            raise HttpException(self._error_message(), status_code=self._status_code, error_code=self._error_code())
+            raise HttpException(message=msg, status_code=self._status_code(), error_code=self._error_code())
         else:
             return self._content
 
