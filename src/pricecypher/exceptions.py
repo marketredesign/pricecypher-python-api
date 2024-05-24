@@ -2,10 +2,10 @@ import warnings
 
 
 class HttpException(Exception):
-    def __init__(self, message: str, **kwargs):
-        super().__init__(message)
+    def __init__(self, **kwargs):
+        super().__init__()
 
-        self.message = kwargs.get('message', message)
+        self.message = kwargs.get('message', 'An unknown error has occurred')
         self.status_code = kwargs.get('status_code', 500)
         self.code = kwargs.get('error_code', "Internal Server Error")
         self.extra = kwargs.get('extra')
@@ -29,7 +29,7 @@ class HttpException(Exception):
 class PriceCypherError(HttpException):
     def __init__(self, status_code, error_code, message):
         warnings.warn('Use of the class `PriceCypherError` is deprecated. Please use `HttpException` instead.')
-        super().__init__(message, status_code=status_code, error_code=error_code)
+        super().__init__(message=message, status_code=status_code, error_code=error_code)
 
 
 class MissingInputException(HttpException):
@@ -41,14 +41,14 @@ class MissingInputException(HttpException):
         message -- explanation of the error
     """
 
-    def __init__(self, message: str, **kwargs):
-        super().__init__(message, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         scopes: list[str] = kwargs.get('scopes', [])
 
         self.statusCode = 400
         self.code = kwargs.get('error_code', 'Bad Request')
         self.code = 'Bad Request'
-        self.message = f'{message or "Missing input variables:"} {", ".join(scopes)}'
+        self.message = kwargs.get('message', 'Missing input variable(s):') + ' ' + ", ".join(scopes)
         self.extra = {'scopes': kwargs.get('scopes')}
 
 
@@ -60,15 +60,13 @@ class IncorrectVolumeException(HttpException):
         message -- explanation of the error
     """
 
-    def __init__(self, message: str, **kwargs):
-        super().__init__(self.message)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         val = kwargs.get('val')
 
         self.statusCode = 400
         self.code = 'Bad Request'
-        self.message = f'''
-            {message or "IncorrectVolumeException: Incorrect volume entered. Please enter positive value"} 
-            ({val})'message + str(val) + ". Please enter a positive value."'''
+        self.message = kwargs.get('message', 'Incorrect volume entered. Please enter positive value') + f' ({val})'
         self.extra = {'volume': val}
 
 
@@ -81,14 +79,14 @@ class DataNotFoundException(HttpException):
         message -- explanation of the error
     """
 
-    def __init__(self, message: str, **kwargs):
-        super().__init__(self.message)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         key = kwargs.get('key', "Unknown")
         value = kwargs.get('value', "Unknown")
 
         self.statusCode = 404
         self.code = 'Not Found'
-        self.message = f'{message or "Data point not found in dataset for column"} {key}: {value}.'
+        self.message = kwargs.get('message', 'Data point not found in dataset for column') + f'{key}: {value}'
         self.extra = {'key': key, 'value': value}
 
 
@@ -101,20 +99,21 @@ class MissingRepresentationException(HttpException):
         message -- explanation of the error
     """
 
-    def __init__(self, message: str, **kwargs):
-        super().__init__(self.message)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         val = kwargs.get('val')
 
         self.statusCode = 409
         self.code = 'Conflict'
-        self.message = f'{message or "Unable to find representation. Please update scopes file."} ({val})'
+        self.message = kwargs.get('message', 'Unable to find representation. Please update scopes file.') + f' ({val})'
         self.extra = {'column': val}
 
 
 class RateLimitError(HttpException):
-    def __init__(self, message: str, **kwargs):
-        super().__init__(message, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         self.status_code = 429
         self.code = kwargs.get('error_code', 'Too Many Requests')
+        self.message = kwargs.get('message', "Rate limit reached") + f' ({kwargs.get("reset_at")})'
         self.extra = {'reset_at': kwargs.get('reset_at')}
