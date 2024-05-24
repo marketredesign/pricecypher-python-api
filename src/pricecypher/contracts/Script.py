@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
-from pricecypher import BaseHandler
+from .BaseHandler import BaseHandler
 
 
 class Script(BaseHandler, ABC):
@@ -27,10 +27,10 @@ class Script(BaseHandler, ABC):
 
     @abstractmethod
     def execute(
-        self,
-        business_cell_id: Optional[int],
-        get_bearer_token: Callable[[], str],
-        user_input: dict[Any: Any],
+            self,
+            business_cell_id: Optional[int],
+            get_bearer_token: Callable[[], str],
+            user_input: dict[Any: Any],
     ) -> Any:
         """
         Execute the script

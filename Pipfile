@@ -19,6 +19,7 @@ flake8 = "~=7.0"
 mock = "~=5.1"
 setuptools = "~=70.0"
 twine = "~=5.1"
+ruff = "~=0.4.5"
 
 [requires]
 python_version = "3.12"

@@ -4,7 +4,7 @@ from typing import List, Optional, Any, Union
 from marshmallow import EXCLUDE
 from marshmallow_dataclass import dataclass
 
-from pricecypher.models.namespaced_schema import NamespacedSchema
+from .namespaced_schema import NamespacedSchema
 
 
 @dataclass(base_schema=NamespacedSchema, frozen=True)

@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pricecypher import PredictResult, AccessTokenGrantType, BaseHandler
+from pricecypher import AccessTokenGrantType
+from .BaseHandler import BaseHandler
+from .dataclasses import PredictResult
 
 
 class InferenceHandler(BaseHandler, ABC):

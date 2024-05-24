@@ -1,8 +1,8 @@
 from typing import Optional
 
-from pricecypher.endpoints.base_endpoint import BaseEndpoint
 from pricecypher.exceptions import HttpException
 from pricecypher.models import ConfigSection, ConfigSectionWithKeys
+from .base_endpoint import BaseEndpoint
 
 
 class ConfigEndpoint(BaseEndpoint):
@@ -22,12 +22,12 @@ class ConfigEndpoint(BaseEndpoint):
     def sections(self):
         """
         Sections endpoints in config service API.
-        :rtype: SectionsEndpoint
+        :rtype: _SectionsEndpoint
         """
-        return SectionsEndpoint(self.client, self._url(['api/datasets', self.dataset_id, '/config/sections']))
+        return _SectionsEndpoint(self.client, self._url(['api/datasets', self.dataset_id, '/config/sections']))
 
 
-class SectionsEndpoint(BaseEndpoint):
+class _SectionsEndpoint(BaseEndpoint):
     """
     PriceCypher sections endpoints in config service API.
     """

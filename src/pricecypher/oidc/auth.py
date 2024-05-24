@@ -18,7 +18,7 @@ class AccessTokenGenerator(ABC):
         raise NotImplementedError
 
 
-class StaticTokenGenerator(AccessTokenGenerator):
+class _StaticTokenGenerator(AccessTokenGenerator):
     _static_access_token: str
 
     def __init__(self, access_token: str):
@@ -29,7 +29,7 @@ class StaticTokenGenerator(AccessTokenGenerator):
         return self._static_access_token
 
 
-class ClientTokenGenerator(AccessTokenGenerator):
+class _ClientTokenGenerator(AccessTokenGenerator):
     _oidc_issuer: str
     _oidc_request_args: dict
     _cached_response: dict
@@ -75,6 +75,6 @@ class AccessTokenGrantType(Enum):
     def get_generator(self, **kwargs) -> AccessTokenGenerator:
         match self:
             case AccessTokenGrantType.STATIC:
-                return StaticTokenGenerator(**kwargs)
+                return _StaticTokenGenerator(**kwargs)
             case AccessTokenGrantType.CLIENT_CREDENTIALS:
-                return ClientTokenGenerator(**kwargs)
+                return _ClientTokenGenerator(**kwargs)

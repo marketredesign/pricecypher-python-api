@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Callable
 
-from pricecypher.contracts import Script, TestSuite
+from .Script import Script
+from .dataclasses import TestSuite
 
 
 class QualityTestScript(Script, ABC):

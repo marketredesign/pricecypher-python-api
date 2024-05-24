@@ -113,7 +113,7 @@ class RestClient(object):
         RestClient options, such as rate-limit retries.
     """
 
-    def __init__(self, jwt, options=None):
+    def __init__(self, jwt, options: RestClientOptions = None):
         if options is None:
             options = RestClientOptions()
 

@@ -1,6 +1,6 @@
-from pricecypher.endpoints.base_endpoint import BaseEndpoint
 from pricecypher.models import Scope, ScopeValue, TransactionSummary, TransactionsPage
 from pricecypher.rest import RestClient
+from .base_endpoint import BaseEndpoint
 
 
 class DatasetsEndpoint(BaseEndpoint):
@@ -26,13 +26,13 @@ class DatasetsEndpoint(BaseEndpoint):
         :param str bc_id: (optional) Business cell ID.
             (defaults to 'all')
         :return: Business cell endpoint
-        :rtype: BusinessCellEndpoint
+        :rtype: _BusinessCellEndpoint
         """
         url = self._url(['api/datasets', self.dataset_id, 'business_cells', bc_id])
-        return BusinessCellEndpoint(self.client, url)
+        return _BusinessCellEndpoint(self.client, url)
 
 
-class BusinessCellEndpoint(BaseEndpoint):
+class _BusinessCellEndpoint(BaseEndpoint):
     """
     Business cell specific endpoints in dataset service.
     """
@@ -43,19 +43,19 @@ class BusinessCellEndpoint(BaseEndpoint):
     def scopes(self):
         """
         Scope endpoints in dataset service.
-        :rtype: ScopesEndpoint
+        :rtype: _ScopesEndpoint
         """
-        return ScopesEndpoint(self.client, self._url('scopes'))
+        return _ScopesEndpoint(self.client, self._url('scopes'))
 
     def transactions(self):
         """
         Transaction endpoints in dataset service.
-        :rtype: TransactionsEndpoint
+        :rtype: _TransactionsEndpoint
         """
-        return TransactionsEndpoint(self.client, self._url('transactions'))
+        return _TransactionsEndpoint(self.client, self._url('transactions'))
 
 
-class ScopesEndpoint(BaseEndpoint):
+class _ScopesEndpoint(BaseEndpoint):
     """
     Scope endpoints in dataset service.
     """
@@ -91,7 +91,7 @@ class ScopesEndpoint(BaseEndpoint):
         return self.client.get(url, params=params, schema=ScopeValue.Schema(many=True))
 
 
-class TransactionsEndpoint(BaseEndpoint):
+class _TransactionsEndpoint(BaseEndpoint):
     """
     Transaction endpoints in dataset service.
     """

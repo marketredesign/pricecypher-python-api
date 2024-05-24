@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
-from pricecypher.contracts.Script import Script
+from .Script import Script
 
 
 class ScopeScript(Script, ABC):
@@ -12,10 +12,10 @@ class ScopeScript(Script, ABC):
     """
 
     def execute(
-        self,
-        business_cell_id: Optional[int],
-        get_bearer_token: Callable[[], str],
-        user_input: dict[Any: Any],
+            self,
+            business_cell_id: Optional[int],
+            get_bearer_token: Callable[[], str],
+            user_input: dict[Any: Any],
     ) -> Any:
         # Executing a scope-script like a normal script:
         # Attempt to extract the transaction IDs and continue as normal
@@ -26,10 +26,10 @@ class ScopeScript(Script, ABC):
 
     @abstractmethod
     def execute_scope_script(
-        self,
-        business_cell_id: Optional[int],
-        get_bearer_token: Callable[[], str],
-        transaction_ids: list[int],
+            self,
+            business_cell_id: Optional[int],
+            get_bearer_token: Callable[[], str],
+            transaction_ids: list[int],
     ) -> dict[int, str]:
         """
         Execute the script to calculate the values of some scope for the given transactions.
