@@ -285,7 +285,7 @@ class Response(object):
                 reset_at = int(self._headers.get('x-ratelimit-reset', '-1'))
                 raise RateLimitError(message=msg, error_code=self._error_code(), reset_at=reset_at)
 
-            raise HttpException(message=msg, status_code=self._status_code(), error_code=self._error_code())
+            raise HttpException(message=msg, status_code=self._status_code, error_code=self._error_code())
         else:
             return self._content
 
