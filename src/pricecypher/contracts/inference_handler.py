@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pricecypher import AccessTokenGrantType
-from .BaseHandler import BaseHandler
+from pricecypher.oidc import AccessTokenGrantType
+from .base_handler import BaseHandler
 from .dataclasses import PredictResult
 
 

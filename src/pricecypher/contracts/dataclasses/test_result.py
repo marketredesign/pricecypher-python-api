@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from pricecypher.contracts import TestStatus
+from pricecypher.enums import TestStatus
 
 
 @dataclass

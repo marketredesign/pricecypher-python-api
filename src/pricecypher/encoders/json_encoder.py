@@ -1,7 +1,7 @@
 import dataclasses
-import numpy as np
-
 from json import JSONEncoder
+
+import numpy as np
 
 
 class PriceCypherJsonEncoder(JSONEncoder):

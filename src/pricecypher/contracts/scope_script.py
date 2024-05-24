@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
-from .Script import Script
+from .script import Script
 
 
 class ScopeScript(Script, ABC):

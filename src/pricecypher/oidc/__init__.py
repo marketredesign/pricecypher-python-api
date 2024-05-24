@@ -1,1 +1,3 @@
-from .auth import AccessTokenGrantType, AccessTokenGenerator
+from .auth import AccessTokenGenerator
+
+__all__ = [AccessTokenGenerator]

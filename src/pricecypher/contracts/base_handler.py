@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pricecypher import AccessTokenGenerator
+from pricecypher.oidc import AccessTokenGenerator
 
 
 class BaseHandler(ABC):

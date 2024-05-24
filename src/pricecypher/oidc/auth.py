@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from time import time
 
 from oic.oauth2 import Client, OauthMessageFactory, CCAccessTokenRequest, AccessTokenResponse
@@ -7,7 +6,7 @@ from oic.oauth2.message import MessageTuple
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 
 
-class CCMessageFactory(OauthMessageFactory):
+class _CCMessageFactory(OauthMessageFactory):
     """Client Credentials Request Factory."""
     token_endpoint = MessageTuple(CCAccessTokenRequest, AccessTokenResponse)
 
@@ -18,7 +17,7 @@ class AccessTokenGenerator(ABC):
         raise NotImplementedError
 
 
-class _StaticTokenGenerator(AccessTokenGenerator):
+class StaticTokenGenerator(AccessTokenGenerator):
     _static_access_token: str
 
     def __init__(self, access_token: str):
@@ -29,7 +28,7 @@ class _StaticTokenGenerator(AccessTokenGenerator):
         return self._static_access_token
 
 
-class _ClientTokenGenerator(AccessTokenGenerator):
+class ClientTokenGenerator(AccessTokenGenerator):
     _oidc_issuer: str
     _oidc_request_args: dict
     _cached_response: dict
@@ -55,7 +54,7 @@ class _ClientTokenGenerator(AccessTokenGenerator):
         if is_in_cache and self._cached_response['expires_at'] > time():
             return self._cached_response['access_token']
 
-        client = Client(client_authn_method=CLIENT_AUTHN_METHOD, message_factory=CCMessageFactory)
+        client = Client(client_authn_method=CLIENT_AUTHN_METHOD, message_factory=_CCMessageFactory)
         client.provider_config(self._oidc_issuer)
 
         resp = client.do_access_token_request(request_args=self._oidc_request_args)
@@ -67,14 +66,3 @@ class _ClientTokenGenerator(AccessTokenGenerator):
 
         return resp.get('access_token')
 
-
-class AccessTokenGrantType(Enum):
-    STATIC = 'static'
-    CLIENT_CREDENTIALS = 'client_credentials'
-
-    def get_generator(self, **kwargs) -> AccessTokenGenerator:
-        match self:
-            case AccessTokenGrantType.STATIC:
-                return _StaticTokenGenerator(**kwargs)
-            case AccessTokenGrantType.CLIENT_CREDENTIALS:
-                return _ClientTokenGenerator(**kwargs)

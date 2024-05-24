@@ -1,6 +1,6 @@
-from pricecypher.endpoints import ConfigEndpoint
-from pricecypher.models import ConfigSection
-from pricecypher.rest import RestClient
+from .endpoints import ConfigEndpoint
+from .models import ConfigSection
+from .rest import RestClient
 
 
 class ConfigSections(object):

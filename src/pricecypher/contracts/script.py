@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
-from .BaseHandler import BaseHandler
+from .base_handler import BaseHandler
 
 
 class Script(BaseHandler, ABC):
