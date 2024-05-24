@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from pricecypher import Accuracy
+from pricecypher.enums import Accuracy
 
 
 @dataclass

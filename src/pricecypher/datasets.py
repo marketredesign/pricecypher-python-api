@@ -144,7 +144,7 @@ class Datasets(object):
         start_date_time=None,
         end_date_time=None,
         bc_id='all',
-        filters=[],
+            filters=None,
         intake_status=None,
         filter_transaction_ids=None,
         dataset_environment=None,
@@ -196,7 +196,7 @@ class Datasets(object):
         # NB: the two separate lists of scope value ids are destructured and put in a set. This removes duplicates.
         filter_scope_value_ids = {
             *self._find_scope_value_filters(columns_with_values),
-            *self._get_additional_scope_value_filter_ids(filters, dataset_id),
+            *self._get_additional_scope_value_filter_ids(filters or [], dataset_id),
         }
 
         # Find all aggregation methods to be sent to the dataset service.
