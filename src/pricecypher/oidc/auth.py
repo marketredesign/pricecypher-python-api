@@ -65,4 +65,3 @@ class ClientTokenGenerator(AccessTokenGenerator):
         }
 
         return resp.get('access_token')
-

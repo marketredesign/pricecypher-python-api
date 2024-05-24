@@ -1,4 +1,5 @@
 from typing import Union
+
 from better_abc import ABCMeta, abstract_attribute
 
 
