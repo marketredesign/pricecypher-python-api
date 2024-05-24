@@ -40,16 +40,10 @@ class MissingInputException(HttpException):
         business_cell -- boolean value, if True, business cell scope is missing
         message -- explanation of the error
     """
-
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         scopes: list[str] = kwargs.get('scopes', [])
-
-        self.statusCode = 400
-        self.code = kwargs.get('error_code', 'Bad Request')
-        self.code = 'Bad Request'
-        self.message = kwargs.get('message', 'Missing input variable(s):') + ' ' + ", ".join(scopes)
-        self.extra = {'scopes': kwargs.get('scopes')}
+        msg = f"Missing input variable(s): [{', '.join(kwargs.get('scopes'))}]"
+        super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'scopes': scopes}, **kwargs)
 
 
 class IncorrectVolumeException(HttpException):
@@ -61,13 +55,9 @@ class IncorrectVolumeException(HttpException):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         val = kwargs.get('val')
-
-        self.statusCode = 400
-        self.code = 'Bad Request'
-        self.message = kwargs.get('message', 'Incorrect volume entered. Please enter positive value') + f' ({val})'
-        self.extra = {'volume': val}
+        msg = f"Incorrect volume entered ({val}). Please enter a positive value."
+        super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'volume': val}, **kwargs)
 
 
 class DataNotFoundException(HttpException):
@@ -80,14 +70,11 @@ class DataNotFoundException(HttpException):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         key = kwargs.get('key', "Unknown")
         value = kwargs.get('value', "Unknown")
-
-        self.statusCode = 404
-        self.code = 'Not Found'
-        self.message = kwargs.get('message', 'Data point not found in dataset for column') + f'{key}: {value}'
-        self.extra = {'key': key, 'value': value}
+        msg = f"Data point not found in dataset for column '{key}' (with value '{value}')"
+        extra = {'key': key, 'value': value}
+        super().__init__(status_code=404, error_code='Not Found', message=msg, extra=extra, **kwargs)
 
 
 class MissingRepresentationException(HttpException):
@@ -100,20 +87,14 @@ class MissingRepresentationException(HttpException):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         val = kwargs.get('val')
-
-        self.statusCode = 409
-        self.code = 'Conflict'
-        self.message = kwargs.get('message', 'Unable to find representation. Please update scopes file.') + f' ({val})'
-        self.extra = {'column': val}
+        msg = "Unable to find representation. Please update scopes file."
+        super().__init__(status_code=409, error_code='Conflict', message=msg, extra={'column': val}, **kwargs)
 
 
 class RateLimitError(HttpException):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.status_code = 429
-        self.code = kwargs.get('error_code', 'Too Many Requests')
-        self.message = kwargs.get('message', "Rate limit reached") + f' ({kwargs.get("reset_at")})'
-        self.extra = {'reset_at': kwargs.get('reset_at')}
+        reset_at = kwargs.get('reset_at')
+        msg = f"Rate limit reached. Reset at: '{reset_at}'."
+        extra = {'reset_at': reset_at}
+        super().__init__(status_code=429, error_code='Too Many Requests', message=msg, extra=extra, **kwargs)
