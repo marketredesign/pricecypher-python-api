@@ -1,7 +1,7 @@
 import json
 import warnings
 
-from encoders import PriceCypherJsonEncoder
+from .encoders import PriceCypherJsonEncoder
 
 
 class HttpException(Exception):
