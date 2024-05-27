@@ -1,4 +1,7 @@
+import json
 import warnings
+
+from encoders import PriceCypherJsonEncoder
 
 
 class HttpException(Exception):
@@ -22,7 +25,7 @@ class HttpException(Exception):
             },
             'isBase64Encoded': False,
             'body': f'{self.code}: {str(self)}',
-            'extra': self.extra,
+            'extra': json.dumps(self.extra, cls=PriceCypherJsonEncoder)
         }
 
 
@@ -40,6 +43,7 @@ class MissingInputException(HttpException):
         business_cell -- boolean value, if True, business cell scope is missing
         message -- explanation of the error
     """
+
     def __init__(self, **kwargs):
         scopes: list[str] = kwargs.get('scopes', [])
         msg = f"Missing input variable(s): [{', '.join(kwargs.get('scopes'))}]"
