@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Callable
 
-from .dataclasses import TestSuite
 from .script import Script
+from ..dataclasses import TestSuite
 
 
 class QualityTestScript(Script, ABC):

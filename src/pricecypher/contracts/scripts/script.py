@@ -1,14 +1,35 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
-from .base_handler import BaseHandler
+from pricecypher.contracts import BaseHandler
 
 
 class Script(BaseHandler, ABC):
     """
-    The abstract Script class serves as an interaction contract such that by extending it with its methods implemented,
-        a script can be created that can be used in a generalized yet controlled setting.
+    The abstract Script class serves as an interaction contract specifically intended for internal tasks being triggered
+    by the PriceCypher Engine itself. Such tasks are expected to (potentially) have a longer execution time. For
+    instance, it is designed to allow tasks to run for a longer time than the lifetime of a single access token.
+
+    NB: This class should not be used for handling events that are being triggered by a user directly. This, as these
+    tasks generally make use of machine-to-machine tokens for authorisation. Indirect triggers by a user (like e.g.
+    starting an intake workflow) should be possible only after proper authorisation has been performed separately.
     """
+
+    @property
+    def config(self):
+        warnings.warn('Use of the public `config` property is deprecated. Please use protected `self._config` instead.')
+        return self._config
+
+    @property
+    def dataset_id(self):
+        warnings.warn('Use of the public `dataset_id` property is deprecated. Please use protected `self._dataset_id`.')
+        return self._dataset_id
+
+    @property
+    def settings(self):
+        warnings.warn('Use of the public `settings` property is deprecated. Please use protected `self._settings`.')
+        return self._settings
 
     @abstractmethod
     def get_scope_dependencies(self) -> list[dict[str, Any]]:
