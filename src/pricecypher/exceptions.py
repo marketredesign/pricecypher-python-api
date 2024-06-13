@@ -29,12 +29,6 @@ class HttpException(Exception):
         }
 
 
-class PriceCypherError(HttpException):
-    def __init__(self, status_code, error_code, message):
-        warnings.warn('Use of the class `PriceCypherError` is deprecated. Please use `HttpException` instead.')
-        super().__init__(message=message, status_code=status_code, error_code=error_code)
-
-
 class MissingInputException(HttpException):
     """Exception raised when one of the necessary inputs is missing.
 
@@ -96,9 +90,22 @@ class MissingRepresentationException(HttpException):
         super().__init__(status_code=409, error_code='Conflict', message=msg, extra={'column': val}, **kwargs)
 
 
-class RateLimitError(HttpException):
-    def __init__(self, **kwargs):
-        reset_at = kwargs.get('reset_at')
-        msg = f"Rate limit reached. Reset at: '{reset_at}'."
-        extra = {'reset_at': reset_at}
-        super().__init__(status_code=429, error_code='Too Many Requests', message=msg, extra=extra, **kwargs)
+class RateLimitException(HttpException):
+    def __init__(self, status_code=429, error_code='Too Many Requests', message=None, **kwargs):
+        self.reset_at = kwargs.get('reset_at')
+        msg = message if not None else f"Rate limit reached. Reset at: '{self.reset_at or 'Unknown'}'."
+        extra = {'reset_at': self.reset_at}
+        super().__init__(status_code=status_code, error_code=error_code, message=msg, extra=extra, **kwargs)
+
+
+class PriceCypherError(HttpException):
+    def __init__(self, status_code, error_code, message):
+        warnings.warn('Use of the class `PriceCypherError` is deprecated. Please use `HttpException` instead.')
+        super().__init__(message=message, status_code=status_code, error_code=error_code)
+
+
+class RateLimitError(PriceCypherError):
+    def __init__(self, error_code=429, message=None, reset_at=None):
+        warnings.warn('Use of the class `RateLimitError` is deprecated. Please use `RateLimitException` instead.')
+        self.reset_at = reset_at
+        super().__init__(status_code=error_code, error_code='Too Many Requests', message=message)

@@ -4,7 +4,7 @@ import unittest
 import mock
 import requests
 
-from pricecypher.exceptions import RateLimitError, HttpException
+from pricecypher.exceptions import RateLimitException, HttpException
 from pricecypher.rest import RestClient, RestClientOptions
 
 
@@ -168,7 +168,7 @@ class TestRest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 429)
         self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 0)
@@ -190,7 +190,7 @@ class TestRest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 429)
         self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, -1)
 
         self.assertEqual(rc._metrics['retries'], 1)
@@ -217,7 +217,7 @@ class TestRest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 429)
         self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 5)
@@ -245,7 +245,7 @@ class TestRest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 429)
         self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 0)
@@ -272,7 +272,7 @@ class TestRest(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 429)
         self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 10)
