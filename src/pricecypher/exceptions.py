@@ -1,7 +1,6 @@
-import json
 import warnings
 
-from .encoders import PriceCypherJsonEncoder
+from .contracts.dataclasses import Response
 
 
 class HttpException(Exception):
@@ -16,17 +15,13 @@ class HttpException(Exception):
     def __str__(self):
         return f'{self.status_code} {self.code}: {self.message}'
 
-    def format_response(self) -> dict:
-        return {
-            'statusCode': self.status_code,
-            'headers': {
-                'Content-Type': 'text/plain',
-                'x-amzn-ErrorType': self.code,
-            },
-            'isBase64Encoded': False,
-            'body': f'{self.code}: {str(self)}',
-            'extra': json.dumps(self.extra, cls=PriceCypherJsonEncoder)
-        }
+    def to_response(self) -> Response:
+        return Response(
+            status_code=self.status_code,
+            body=f'{self.code}: {str(self)}',
+            headers={'Content-Type': 'text/plain'},
+            extra=self.extra,
+        )
 
 
 class MissingInputException(HttpException):
