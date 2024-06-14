@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
 from pricecypher.contracts import BaseHandler
+from pricecypher.enums import AccessTokenGrantType
 
 
 class Script(BaseHandler, ABC):
@@ -15,6 +16,21 @@ class Script(BaseHandler, ABC):
     tasks generally make use of machine-to-machine tokens for authorisation. Indirect triggers by a user (like e.g.
     starting an intake workflow) should be possible only after proper authorisation has been performed separately.
     """
+
+    def set_oidc_client_credentials(self, oidc_issuer, oidc_config):
+        """
+        Set the OIDC (client) details that the script uses to issue new access tokens (following the client_credentials
+        grant type).
+
+        :param oidc_issuer: The OIDC Issuer used to issue new access tokens. It must expose a "well-known" OpenID
+        Configuration (used to determine, for instance, the token endpoint).
+        :param oidc_config: Dictionary containing all request arguments used when issuing new access tokens.
+            NB: If a `scope` key is specified, it will be included in the token request only if the value is not empty.
+        """
+        self._token_generator = AccessTokenGrantType.CLIENT_CREDENTIALS.get_generator(
+            oidc_issuer=oidc_issuer,
+            oidc_config=oidc_config,
+        )
 
     @property
     def config(self):
