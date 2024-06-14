@@ -23,7 +23,7 @@ class InferenceHandler(BaseHandler, ABC):
             InferenceHandler has to explicitly set this access token within a handler instance. Note that a M2M access
             token should not be used for this since that would lead to privilege escalating vulnerabilities.
         """
-        self._token_generator = AccessTokenGrantType.STATIC.get_generator(access_token=access_token)
+        self.set_token_generator(AccessTokenGrantType.STATIC.get_generator(access_token=access_token))
 
     @abstractmethod
     def handle(self, user_input: dict[Any: Any]) -> PredictResult:

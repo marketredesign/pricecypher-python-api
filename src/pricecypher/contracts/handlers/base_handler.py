@@ -38,6 +38,9 @@ class BaseHandler(ABC):
         self._settings = settings
         self._config = config
 
+    def set_token_generator(self, token_generator: AccessTokenGenerator):
+        self._token_generator = token_generator
+
     def _get_access_token(self):
         """
         Retrieve a (possibly newly issued) access token that should be used for all requests to the PriceCypher Engine.

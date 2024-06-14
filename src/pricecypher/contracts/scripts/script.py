@@ -27,10 +27,10 @@ class Script(BaseHandler, ABC):
         :param oidc_config: Dictionary containing all request arguments used when issuing new access tokens.
             NB: If a `scope` key is specified, it will be included in the token request only if the value is not empty.
         """
-        self._token_generator = AccessTokenGrantType.CLIENT_CREDENTIALS.get_generator(
+        self.set_token_generator(AccessTokenGrantType.CLIENT_CREDENTIALS.get_generator(
             oidc_issuer=oidc_issuer,
             oidc_config=oidc_config,
-        )
+        ))
 
     @property
     def config(self):
