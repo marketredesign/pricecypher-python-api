@@ -4,7 +4,7 @@ from typing import Union
 from pricecypher.enums import TestStatus
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElementTestResult:
     """
     Defines a test result of one element of a test.
@@ -20,7 +20,7 @@ class ElementTestResult:
     value: Union[str, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElementTest:
     """
     Defines the test of a single element of a test case, having one or multiple test results. For instance, one element
@@ -39,7 +39,7 @@ class ElementTest:
     results: list[ElementTestResult]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TestResult:
     """
     Defines one test case with overall status result and multiple test results.
@@ -65,7 +65,7 @@ class TestResult:
     elements: list[ElementTest]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TestSuite:
     """
     One quality test script always produces one TestSuite response. A test suite (usually) contains multiple test cases.

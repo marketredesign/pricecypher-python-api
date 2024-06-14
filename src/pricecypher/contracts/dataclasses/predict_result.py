@@ -4,21 +4,21 @@ from typing import Optional
 from pricecypher.enums import Accuracy
 
 
-@dataclass
+@dataclass(frozen=True)
 class PredictValues:
     predictive_price: float
     max_predictive_range: Optional[float]
     min_predictive_range: Optional[float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PredictStep:
     key: str
     value: float
     order: Optional[int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PredictResult:
     """
     Result after model inference, i.e. the model prediction result. It consists of the following properties.
