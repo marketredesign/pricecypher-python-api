@@ -137,17 +137,17 @@ class Datasets(object):
             .summary(intake_status)
 
     def get_transactions(
-        self,
-        dataset_id,
-        aggregate,
-        columns,
-        start_date_time=None,
-        end_date_time=None,
-        bc_id='all',
+            self,
+            dataset_id,
+            aggregate,
+            columns,
+            start_date_time=None,
+            end_date_time=None,
+            bc_id='all',
             filters=None,
-        intake_status=None,
-        filter_transaction_ids=None,
-        dataset_environment=None,
+            intake_status=None,
+            filter_transaction_ids=None,
+            dataset_environment=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
