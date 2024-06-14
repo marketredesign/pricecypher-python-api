@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from pricecypher.contracts.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
 
@@ -22,11 +23,11 @@ class BaseHandler(ABC):
     """
 
     _dataset_id: int
-    _settings: dict[str, Any]
+    _settings: HandlerSettings
     _config: dict[str, dict[str, Any]]
     _token_generator: AccessTokenGenerator
 
-    def __init__(self, dataset_id: int, settings: dict[str, Any], config: dict[str, dict[str, Any]]):
+    def __init__(self, dataset_id: int, settings: HandlerSettings, config: dict[str, dict[str, Any]]):
         """
         :param dataset_id:
         :param settings: Context / environment-specific key-value settings pairs.
@@ -76,7 +77,7 @@ class BaseHandler(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def handle(self, user_input: dict[Any: Any]) -> any:
+    def handle(self, user_input: dict[str, Any]) -> any:
         """
         Handle the given `user_input`.
 

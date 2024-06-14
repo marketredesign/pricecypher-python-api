@@ -43,9 +43,9 @@ class Script(BaseHandler, ABC):
         return self._dataset_id
 
     @property
-    def settings(self):
+    def settings(self) -> dict[str, Any]:
         warnings.warn('Use of the public `settings` property is deprecated. Please use protected `self._settings`.')
-        return self._settings
+        return self._settings.__dict__
 
     @abstractmethod
     def get_scope_dependencies(self) -> list[dict[str, Any]]:
@@ -59,7 +59,7 @@ class Script(BaseHandler, ABC):
         """
         raise NotImplementedError
 
-    def handle(self, user_input: dict[Any: Any]) -> any:
+    def handle(self, user_input: dict[str, Any]) -> any:
         return self.execute('all', self._get_access_token, user_input)
 
     @abstractmethod
