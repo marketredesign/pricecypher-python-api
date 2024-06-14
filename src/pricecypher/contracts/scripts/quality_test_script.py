@@ -3,6 +3,7 @@ from typing import Optional, Any, Callable
 
 from .script import Script
 from ..dataclasses import TestSuite
+from ...enums import AccessTokenGrantType
 
 
 class QualityTestScript(Script, ABC):
@@ -11,6 +12,9 @@ class QualityTestScript(Script, ABC):
         methods implemented, a script can be created that performs data quality tests on a dataset, which can then be
         used in a generalized yet controlled setting.
     """
+
+    def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
+        return {AccessTokenGrantType.CLIENT_CREDENTIALS}
 
     def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str],
                 user_input: dict[Any: Any]) -> Any:

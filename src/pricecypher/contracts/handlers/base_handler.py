@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
 
 
@@ -48,6 +49,13 @@ class BaseHandler(ABC):
         token or return a (static) access token for a specific user requesting the task execution.
         """
         return self._token_generator.generate()
+
+    @abstractmethod
+    def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
+        """
+        Defines the allowed access token grant types of (the children of) this event handler class.
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def get_config_dependencies(self) -> dict[str, list[str]]:

@@ -15,6 +15,9 @@ class InferenceHandler(BaseHandler, ABC):
         least) be usable to handle HTTP requests (using the access token provided in such underlying request).
     """
 
+    def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
+        return {AccessTokenGrantType.STATIC}
+
     def set_access_token(self, access_token):
         """
         Set the static access token that will then be returned each time {self._get_access_token()} is called.
