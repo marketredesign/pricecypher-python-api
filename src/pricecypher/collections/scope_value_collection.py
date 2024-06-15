@@ -1,24 +1,8 @@
 from pricecypher.models import ScopeValue
-from .base_collection import BaseCollection
+from .base_collection import Collection
 
 
-class ScopeValueCollection(BaseCollection):
-    _type = ScopeValue
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__} {self._list}>"
-
-    def __len__(self):
-        """List length"""
-        return len(self._list)
-
-    def __getitem__(self, ii):
-        """Get a list item"""
-        return self._list[ii]
-
-    def __str__(self):
-        return str(self._list)
-
+class ScopeValueCollection(Collection[ScopeValue]):
     def where_in(self, values):
         """
         Filter collection on the given values.
