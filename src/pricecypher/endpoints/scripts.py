@@ -1,6 +1,7 @@
 from typing import Optional
 
-from pricecypher.models import Script, ScriptExecution
+from pricecypher.exceptions import HttpException
+from pricecypher.models import Script, ScriptExecution, CreateScriptExecResponse
 from .base_endpoint import BaseEndpoint
 
 
@@ -65,6 +66,19 @@ class _ScriptExecutionsEndpoint(BaseEndpoint):
         self.base_url = base
         self.param_keys = {'environment'}
 
+    def store(self, output_path: str) -> Optional[CreateScriptExecResponse]:
+        body = {
+            'execute': False,
+            'location': output_path,
+        }
+        return self.client.post(self._url(), data=body, schema=CreateScriptExecResponse.Schema())
+
     def latest_output(self, **kwargs) -> Optional[ScriptExecution]:
+        url = self._url(['latest/output'])
         params = self._find_request_params(**kwargs)
-        return self.client.get(self._url(['latest/output']), params=params, schema=ScriptExecution.Schema(many=False))
+        try:
+            return self.client.get(url, params=params, schema=ScriptExecution.Schema(many=False))
+        except HttpException as err:
+            if err.status_code == 404:
+                return None
+            raise err

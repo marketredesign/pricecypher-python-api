@@ -18,17 +18,24 @@ p_has_url_proto = re.compile('(.+)://(.+)')
 
 class FileStorage(ABC):
     _path_local: str
-    _path_remote: str
+    _path_remote_base: str
+    _path_remote_prefix: str
 
-    def __init__(self, path_local: str, path_remote: str):
+    def __init__(self, path_local: str, path_remote_base: str, path_remote_prefix: str):
         self._path_local = path_local
-        self._path_remote = path_remote
+        self._path_remote_base = path_remote_base
+        self._path_remote_prefix = path_remote_prefix
 
     def get_path_local(self, filename: str) -> str:
         return os.path.join(self._path_local, filename)
 
-    def get_path_remote(self, filename: str) -> str:
-        return os.path.join(self._path_remote, filename)
+    def get_path_remote(self, filename: str, full: bool = True) -> str:
+        suffix = os.path.join(self._path_remote_prefix, filename)
+
+        if not full:
+            return suffix
+
+        return os.path.join(self._path_remote_base, suffix)
 
     @classmethod
     def get_scheme(cls, uri_as_string):
@@ -55,13 +62,12 @@ class FileStorage(ABC):
         - `Standard library reference <https://docs.python.org/3.7/library/functions.html#open>`__
         - `smart_open README.rst <https://github.com/RaRe-Technologies/smart_open/blob/master/README.rst>`__
         """
-        if not self._path_local or not self._path_remote:
+        if not self._path_local:
             raise InvalidStateException("The `path_local_outputs` and `path_local_outputs` must be set to save files.")
 
         local = self.get_path_local(filename)
-        remote = self.get_path_remote(filename)
 
-        logging.info(f"Saving file, local path = '{local}', remote path = '{remote}'...")
+        logging.info(f"Saving file, local path = '{local}', remote path = '{self.get_path_remote(filename)}'...")
 
         if self.get_scheme(local) == 'file':
             logging.debug("Making non-existing directories on the path to parent of `file_path_local`...")

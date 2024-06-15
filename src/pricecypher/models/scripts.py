@@ -36,3 +36,8 @@ class ScriptExecution:
         name = "output"
         plural_name = "outputs"
         unknown = EXCLUDE
+
+
+@dataclass(frozen=True)
+class CreateScriptExecResponse:
+    execution_id: int = field(compare=False)
