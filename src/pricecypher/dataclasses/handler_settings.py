@@ -9,8 +9,9 @@ class HandlerSettings:
     base_users: str = None
     base_config: str = None
     base_scripts: str = None
-    path_local_outputs: Optional[str] = None
-    path_remote_outputs: Optional[str] = None
+    path_local_out: Optional[str] = None
+    path_remote_out_base: Optional[str] = None
+    path_remote_out_prefix: Optional[str] = None
 
     def __post_init__(self):
         self.base_users = self.base_users or os.environ.get('BASE_USERS', 'https://users.pricecypher.com')

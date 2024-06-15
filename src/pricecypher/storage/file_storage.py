@@ -111,4 +111,4 @@ class FileStorage(ABC):
 
     @classmethod
     def from_handler_settings(cls: Type[FileStorage], settings: HandlerSettings) -> FileStorage:
-        return cls(settings.path_local_outputs, settings.path_remote_outputs)
+        return cls(settings.path_local_out, settings.path_remote_out_base, settings.path_remote_out_prefix)
