@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable
 
+from pricecypher.enums import AccessTokenGrantType
 from .script import Script
-from ...enums import AccessTokenGrantType
 
 
 class ScopeScript(Script, ABC):

@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pricecypher.contracts.dataclasses import HandlerSettings
+from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
+from pricecypher.storage import FileStorage
 
 
 class BaseHandler(ABC):
@@ -16,7 +17,7 @@ class BaseHandler(ABC):
         handling an HTTP request, and any other type of task that might be needed in the future.
         In general, this generic BaseHandler as well as (most of) its subclasses intend to abstract away from the
         specific source of the event that triggers the task execution. To that end, a "runtime" has to be defined once
-        for each possible event source (e.g. HTTP request, Argo workflow step, Kafka event message, etc). Such runtime
+        for each possible event source (e.g. HTTP request, Argo workflow step, Kafka event message, etc.). Such runtime
         should be able to execute any handler that implements (a subclass of) this BaseHandler class.
         Please see the subclasses of this BaseHandler for a given, specific, task at hand since using the most specific
         handler contract should simplify the specific handler implementation.

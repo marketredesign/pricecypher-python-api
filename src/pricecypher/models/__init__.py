@@ -3,5 +3,16 @@ from .datasets import Scope, ScopeValue, TransactionSummary, ScopeValueTransacti
     Transaction, PageMeta, TransactionsPage
 from .users import Dataset
 
-__all__ = [Dataset, Scope, ScopeValue, TransactionSummary, ScopeValueTransaction, ScopeConstantTransaction, Transaction,
-           PageMeta, TransactionsPage, ConfigSection, ConfigSectionWithKeys]
+__all__ = [
+    'ConfigSection',
+    'ConfigSectionWithKeys',
+    'Dataset',
+    'PageMeta',
+    'Scope',
+    'ScopeConstantTransaction',
+    'ScopeValue',
+    'ScopeValueTransaction',
+    'Transaction',
+    'TransactionSummary',
+    'TransactionsPage',
+]

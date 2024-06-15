@@ -1,10 +1,16 @@
 import warnings
 
-from .contracts.dataclasses import Response
+from .dataclasses import Response
 
 
 class HttpException(Exception):
     def __init__(self, **kwargs):
+        """
+        :key message: (detailed) error message
+        :key status_code: HTTP status code
+        :key error_code: Short error description
+        :key extra: Dictionary of extra information
+        """
         super().__init__()
 
         self.message = kwargs.get('message', 'An unknown error has occurred')
@@ -25,44 +31,44 @@ class HttpException(Exception):
 
 
 class MissingInputException(HttpException):
-    """Exception raised when one of the necessary inputs is missing.
-
-    Attributes:
-        scopes -- scope missing from user input
-        business_cell -- boolean value, if True, business cell scope is missing
-        message -- explanation of the error
-    """
+    """Exception raised when one of the necessary inputs is missing."""
 
     def __init__(self, **kwargs):
+        """
+        See keys of :class:`HttpException`.
+
+        :key scopes: scope missing from user input
+        """
         scopes: list[str] = kwargs.get('scopes', [])
         msg = f"Missing input variable(s): [{', '.join(kwargs.get('scopes'))}]"
         super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'scopes': scopes}, **kwargs)
 
 
 class IncorrectVolumeException(HttpException):
-    """Exception raised when user input has incorrect volume.
-
-    Attributes:
-        val -- incorrect volume value
-        message -- explanation of the error
-    """
+    """Exception raised when user input has incorrect volume."""
 
     def __init__(self, **kwargs):
+        """
+        See keys of :class:`HttpException`.
+
+        :key val: Incorrect volume value
+        """
         val = kwargs.get('val')
         msg = f"Incorrect volume entered ({val}). Please enter a positive value."
+        MissingInputException()
         super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'volume': val}, **kwargs)
 
 
 class DataNotFoundException(HttpException):
-    """Exception raised when one of the necessary input by the user is missing from the dataset.
-
-    Attributes:
-        key -- column/scope with missing data
-        value -- data value that is missing
-        message -- explanation of the error
-    """
+    """Exception raised when one of the necessary input by the user is missing from the dataset."""
 
     def __init__(self, **kwargs):
+        """
+        See keys of :class:`HttpException`.
+
+        :key key: column/scope with missing data
+        :key value: data value that is missing
+        """
         key = kwargs.get('key', "Unknown")
         value = kwargs.get('value', "Unknown")
         msg = f"Data point not found in dataset for column '{key}' (with value '{value}')"
@@ -70,19 +76,28 @@ class DataNotFoundException(HttpException):
         super().__init__(status_code=404, error_code='Not Found', message=msg, extra=extra, **kwargs)
 
 
-class MissingRepresentationException(HttpException):
-    """Exception raised when the script expects a representation,
-    but it is not found due to excel configuration.
+class InvalidStateException(HttpException):
+    """Exception raised when an invalid / conflicting state is encountered."""
 
-    Attributes:
-        val -- column that should be indicated as a representation
-        message -- explanation of the error
-    """
+    def __init__(self, message, **kwargs):
+        """
+        See keys of :class:`HttpException`.
+        """
+        super().__init__(status_code=409, error_code='Conflict', message=message, **kwargs)
+
+
+class MissingRepresentationException(InvalidStateException):
+    """Exception raised when the script expects a representation, but no such scope exists in the dataset."""
 
     def __init__(self, **kwargs):
+        """
+        See keys of :class:`HttpException`.
+
+        :key val: column that should be indicated as a representation
+        """
         val = kwargs.get('val')
         msg = "Unable to find representation. Please update scopes file."
-        super().__init__(status_code=409, error_code='Conflict', message=msg, extra={'column': val}, **kwargs)
+        super().__init__(message=msg, extra={'column': val}, **kwargs)
 
 
 class RateLimitException(HttpException):

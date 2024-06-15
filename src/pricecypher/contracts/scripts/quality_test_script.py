@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Callable
 
+from pricecypher.dataclasses import TestSuite
+from pricecypher.enums import AccessTokenGrantType
 from .script import Script
-from ..dataclasses import TestSuite
-from ...enums import AccessTokenGrantType
 
 
 class QualityTestScript(Script, ABC):

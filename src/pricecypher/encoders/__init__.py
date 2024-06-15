@@ -1,3 +1,3 @@
 from .json_encoder import PriceCypherJsonEncoder
 
-__all__ = [PriceCypherJsonEncoder]
+__all__ = ['PriceCypherJsonEncoder']
