@@ -27,6 +27,7 @@ class BaseHandler(ABC):
     _settings: HandlerSettings
     _config: dict[str, dict[str, Any]]
     _token_generator: AccessTokenGenerator
+    _file_storage: FileStorage
 
     def __init__(self, dataset_id: int, settings: HandlerSettings, config: dict[str, dict[str, Any]]):
         """
@@ -40,6 +41,7 @@ class BaseHandler(ABC):
         self._dataset_id = dataset_id
         self._settings = settings
         self._config = config
+        self._file_storage = FileStorage.from_handler_settings(self._settings)
 
     def set_token_generator(self, token_generator: AccessTokenGenerator):
         self._token_generator = token_generator

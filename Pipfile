@@ -12,6 +12,7 @@ pandas = ">=1.4"
 requests = "~=2.14"
 typeguard = ">=2.13"
 pbr = "~=6.0"
+smart-open = "~=7.0"
 
 [dev-packages]
 build = "~=1.2"
