@@ -35,7 +35,7 @@ class BaseEndpoint(metaclass=ABCMeta):
         """
         Constructs a dict containing the request parameters that should be included in the HTTP request.
         The possible request param keys can be given using keyword argument `keys`, falling back to `self.param_keys`.
-        Only keys with a corresponding value which is considered 'truthy', are included in the request params.
+        Only keys with a corresponding value which is not None, are included in the request params.
         :key keys: possible / "allowed" request parameter keys. Defaults to `self.param_keys` if not provided.
         :param kwargs: For each request param key, optionally a value that should be used for the request parameter.
         :return: Dictionary of request parameters.
@@ -46,7 +46,7 @@ class BaseEndpoint(metaclass=ABCMeta):
         for key in keys:
             value = kwargs.get(key)
 
-            if not value:
+            if value is None:
                 continue
 
             params[key] = value

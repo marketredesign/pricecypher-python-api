@@ -16,7 +16,7 @@ class ConfigSections(object):
         (defaults to None)
     """
 
-    """ Default user-tool base URL """
+    """ Default config service base URL """
     default_config_base = 'https://config.pricecypher.com'
 
     def __init__(self, bearer_token, dataset_id, config_base=None, rest_options=None):
