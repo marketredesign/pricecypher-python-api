@@ -18,10 +18,10 @@ smart-open = "~=7.0"
 build = "~=1.2"
 flake8 = "~=7.0"
 mock = "~=5.1"
-setuptools = "~=70.0"
 twine = "~=5.1"
 ruff = "~=0.4.5"
 sphinx = "~=7.3"
+mypy = "~=1.10"
 
 [requires]
 python_version = "3.12"
