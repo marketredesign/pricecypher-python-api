@@ -18,6 +18,7 @@ class ConfigEndpoint(BaseEndpoint):
         self.base_url = config_base
         self.client = client
         self.dataset_id = dataset_id
+        self.param_keys = ['environment']
 
     def sections(self):
         """
@@ -35,23 +36,28 @@ class _SectionsEndpoint(BaseEndpoint):
         self.client = client
         self.base_url = base
 
-    def index(self) -> list[ConfigSection]:
+    def index(self, **kwargs) -> list[ConfigSection]:
         """List all available config sections for the dataset.
 
         :return: list of config sections.
+        :key environment: (Optional) environment of the underlying data intake to query. Defaults to latest intake.
         :rtype list[ConfigSection]
         """
-        return self.client.get(self._url(), schema=ConfigSection.Schema(many=True))
+        params = self._find_request_params(**kwargs)
+        return self.client.get(self._url(), params=params, schema=ConfigSection.Schema(many=True))
 
-    def get(self, section_key) -> Optional[ConfigSectionWithKeys]:
+    def get(self, section_key, **kwargs) -> Optional[ConfigSectionWithKeys]:
         """ Retrieve the config section, with its contained key-value pairs, using the given section key.
 
         :param str section_key: Key of the section to retrieve.
+        :key environment: (Optional) environment of the underlying data intake to query. Defaults to latest intake.
         :return: The requested config section with its contained key-value pairs, or `None` if no such section exists.
         :rtype Optional[ConfigSectionWithKeys]
         """
         try:
-            return self.client.get(self._url(section_key), schema=ConfigSectionWithKeys.Schema(many=False))
+            url = self._url(section_key)
+            params = self._find_request_params(**kwargs)
+            return self.client.get(url, params=params, schema=ConfigSectionWithKeys.Schema(many=False))
         except HttpException as e:
             if e.status_code == 404:
                 return None
