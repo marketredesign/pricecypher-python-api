@@ -20,7 +20,7 @@ class AccessTokenGenerator(ABC):
 class StaticTokenGenerator(AccessTokenGenerator):
     _static_access_token: str
 
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: str, **kwargs):  # noqa - allow extra, unused keyed arguments
         super().__init__()
         self._static_access_token = access_token
 
@@ -33,7 +33,7 @@ class ClientTokenGenerator(AccessTokenGenerator):
     _oidc_request_args: dict
     _cached_response: dict
 
-    def __init__(self, oidc_issuer: str, oidc_config: dict):
+    def __init__(self, oidc_issuer: str, oidc_config: dict, **kwargs):  # noqa - allow extra, unused keyed arguments
         super().__init__()
         self._oidc_issuer = oidc_issuer
         self._oidc_request_args = self._oidc_request_args(oidc_config)
