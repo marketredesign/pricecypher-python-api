@@ -30,7 +30,12 @@ class HttpException(Exception):
         )
 
 
-class MissingInputException(HttpException):
+class BadRequestException(HttpException):
+    def __init__(self, **kwargs):
+        super().__init__(status_code=400, error_code='Bad Request', **kwargs)
+
+
+class MissingInputException(BadRequestException):
     """Exception raised when one of the necessary inputs is missing."""
 
     def __init__(self, **kwargs):
@@ -41,10 +46,10 @@ class MissingInputException(HttpException):
         """
         scopes: list[str] = kwargs.get('scopes', [])
         msg = f"Missing input variable(s): [{', '.join(kwargs.get('scopes'))}]"
-        super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'scopes': scopes}, **kwargs)
+        super().__init__(message=msg, extra={'scopes': scopes}, **kwargs)
 
 
-class IncorrectVolumeException(HttpException):
+class IncorrectVolumeException(BadRequestException):
     """Exception raised when user input has incorrect volume."""
 
     def __init__(self, **kwargs):
@@ -56,10 +61,15 @@ class IncorrectVolumeException(HttpException):
         val = kwargs.get('val')
         msg = f"Incorrect volume entered ({val}). Please enter a positive value."
         MissingInputException()
-        super().__init__(status_code=400, error_code='Bad Request', message=msg, extra={'volume': val}, **kwargs)
+        super().__init__(message=msg, extra={'volume': val}, **kwargs)
 
 
-class DataNotFoundException(HttpException):
+class NotFoundException(HttpException):
+    def __init__(self, message, **kwargs):
+        super().__init__(status_code=404, error_code='Not Found', message=message, **kwargs)
+
+
+class DataNotFoundException(NotFoundException):
     """Exception raised when one of the necessary input by the user is missing from the dataset."""
 
     def __init__(self, **kwargs):
@@ -73,7 +83,7 @@ class DataNotFoundException(HttpException):
         value = kwargs.get('value', "Unknown")
         msg = f"Data point not found in dataset for column '{key}' (with value '{value}')"
         extra = {'key': key, 'value': value}
-        super().__init__(status_code=404, error_code='Not Found', message=msg, extra=extra, **kwargs)
+        super().__init__(message=msg, extra=extra, **kwargs)
 
 
 class InvalidStateException(HttpException):
