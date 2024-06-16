@@ -26,7 +26,7 @@ class ConfigSections(object):
         self._rest_options = rest_options
         self._client = RestClient(jwt=bearer_token, options=rest_options)
 
-    def index(self, environment) -> list[ConfigSection]:
+    def index(self, environment=None) -> list[ConfigSection]:
         """
         List all available config sections for the dataset.
 
