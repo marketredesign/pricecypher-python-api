@@ -54,9 +54,7 @@ class _ScriptEndpoint(BaseEndpoint):
         self.base_url = base
 
     def executions(self):
-        """List all available config sections for the dataset.
-
-        """
+        """List all available config sections for the dataset."""
         return _ScriptExecutionsEndpoint(self.client, self._url(['executions']))
 
 
