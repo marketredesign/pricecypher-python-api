@@ -20,6 +20,7 @@ class ScriptService(object):
     :param str bearer_token: Bearer token for PriceCypher (logical) API. The following scopes are relevant.
         - 'read:scripts': Required for all interactions with the PriceCypher Script Service.
         - 'read:scripts:output': Required for reading the output body of a script that is done executing.
+        - 'execute:scripts': Required for registering (part of storing) script execution outputs.
     :param int dataset_id: Dataset that is queried by these scripts operations.
     :param str scripts_base: (optional) Base URL of PriceCypher Script Service API.
         (defaults to the static `default_scripts_base`, which in turn defaults to https://scripts.pricecypher.com)
