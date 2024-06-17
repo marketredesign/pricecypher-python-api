@@ -16,7 +16,11 @@ class Response:
     headers: dict[str, str] = field(default_factory=lambda: {})
     extra: dict[str, Any] = field(default_factory=lambda: {})
 
-    def todict(self, to_json=False) -> dict:
+    def to_dict(self, to_json=False) -> dict:
+        """
+        Converts the response object to a dictionary.
+        :param to_json: If `True`, the returned `body` and `extra` fields are serialized into JSON strings.
+        """
         headers = self.headers
         body = self.body
         extra = self.extra
