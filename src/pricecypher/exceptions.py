@@ -45,7 +45,7 @@ class MissingInputException(BadRequestException):
         :key scopes: scope missing from user input
         """
         scopes: list[str] = kwargs.get('scopes', [])
-        msg = f"Missing input variable(s): [{', '.join(kwargs.get('scopes'))}]"
+        msg = f"Missing input variable(s): [{', '.join(iter(kwargs.get('scopes', [])))}]"
         super().__init__(message=msg, extra={'scopes': scopes}, **kwargs)
 
 
