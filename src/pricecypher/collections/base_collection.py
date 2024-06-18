@@ -1,20 +1,27 @@
 from abc import ABCMeta
 from collections.abc import Sequence
+from typing import TypeVar
 
-from better_abc import abstract_attribute
+T = TypeVar('T')
 
 
-class BaseCollection(Sequence, metaclass=ABCMeta):
-    _type = abstract_attribute()
-
+class Collection(Sequence[T], metaclass=ABCMeta):
     def __init__(self, items):
         self._list = list(items)
-        self._check_types()
 
-    def _check_types(self):
-        for v in self._list:
-            if not isinstance(v, self._type):
-                raise TypeError(v)
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self._list}>"
+
+    def __len__(self) -> int:
+        """List length"""
+        return len(self._list)
+
+    def __getitem__(self, ii) -> T:
+        """Get a list item"""
+        return self._list[ii]
+
+    def __str__(self) -> str:
+        return str(self._list)
 
     def pluck(self, prop):
         """
@@ -24,3 +31,7 @@ class BaseCollection(Sequence, metaclass=ABCMeta):
         :return:
         """
         return [getattr(v, prop) for v in self._list]
+
+    def where(self, prop, value) -> 'Collection[T]':
+        filtered = filter(lambda v: getattr(v, prop) == value, self._list)
+        return type(self)(filtered)

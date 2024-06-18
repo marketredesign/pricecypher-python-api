@@ -1,11 +1,11 @@
-import unittest
 import json
+import unittest
 
 import mock
 import requests
 
+from pricecypher.exceptions import RateLimitException, HttpException
 from pricecypher.rest import RestClient, RestClientOptions
-from pricecypher.exceptions import PriceCypherError, RateLimitError
 
 
 class TestRest(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestRest(unittest.TestCase):
         mock_get.return_value.status_code = 200
 
         rc.get('the-url')
-        mock_get.assert_called_with('the-url', params=None, headers=headers, timeout=(10, 2))
+        mock_get.assert_called_with('the-url', params=None, headers=headers, timeout=(10, 2), verify=True)
 
     @mock.patch('requests.post')
     def test_post_custom_timeout(self, mock_post):
@@ -72,7 +72,7 @@ class TestRest(unittest.TestCase):
         mock_post.return_value.status_code = 200
 
         rc.post('the-url')
-        mock_post.assert_called_with('the-url', data='null', headers=headers, timeout=(10, 2))
+        mock_post.assert_called_with('the-url', data='null', headers=headers, timeout=(10, 2), verify=True)
 
     @mock.patch('requests.put')
     def test_put_custom_timeout(self, mock_put):
@@ -83,7 +83,7 @@ class TestRest(unittest.TestCase):
         mock_put.return_value.status_code = 200
 
         rc.put('the-url')
-        mock_put.assert_called_with('the-url', json=None, headers=headers, timeout=(10, 2))
+        mock_put.assert_called_with('the-url', json=None, headers=headers, timeout=(10, 2), verify=True)
 
     @mock.patch('requests.patch')
     def test_patch_custom_timeout(self, mock_patch):
@@ -94,7 +94,7 @@ class TestRest(unittest.TestCase):
         mock_patch.return_value.status_code = 200
 
         rc.patch('the-url')
-        mock_patch.assert_called_with('the-url', json=None, headers=headers, timeout=(10, 2))
+        mock_patch.assert_called_with('the-url', json=None, headers=headers, timeout=(10, 2), verify=True)
 
     @mock.patch('requests.delete')
     def test_delete_custom_timeout(self, mock_delete):
@@ -105,7 +105,7 @@ class TestRest(unittest.TestCase):
         mock_delete.return_value.status_code = 200
 
         rc.delete('the-url')
-        mock_delete.assert_called_with('the-url', params={}, json=None, headers=headers, timeout=(10, 2))
+        mock_delete.assert_called_with('the-url', params={}, json=None, headers=headers, timeout=(10, 2), verify=True)
 
     @mock.patch('requests.get')
     def test_get(self, mock_get):
@@ -116,14 +116,14 @@ class TestRest(unittest.TestCase):
         mock_get.return_value.status_code = 200
 
         response = rc.get('the-url')
-        mock_get.assert_called_with('the-url', params=None, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_get.assert_called_with('the-url', params=None, headers=headers, timeout=self.TIMEOUT_DEF, verify=True)
 
         self.assertEqual(response, ['a', 'b'])
 
         response = rc.get(url='the/url', params={'A': 'param', 'B': 'param'})
         mock_get.assert_called_with('the/url', params={'A': 'param',
                                                        'B': 'param'},
-                                    headers=headers, timeout=self.TIMEOUT_DEF)
+                                    headers=headers, timeout=self.TIMEOUT_DEF, verify=True)
         self.assertEqual(response, ['a', 'b'])
 
         mock_get.return_value.text = ''
@@ -139,11 +139,11 @@ class TestRest(unittest.TestCase):
                                      ' "message": "message"}'
         mock_get.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     @mock.patch('requests.get')
@@ -162,13 +162,13 @@ class TestRest(unittest.TestCase):
             'x-ratelimit-reset': '9',
         }
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 429)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 0)
@@ -184,13 +184,13 @@ class TestRest(unittest.TestCase):
         mock_get.return_value.status_code = 429
 
         mock_get.return_value.headers = {}
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 429)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, -1)
 
         self.assertEqual(rc._metrics['retries'], 1)
@@ -211,13 +211,13 @@ class TestRest(unittest.TestCase):
             'x-ratelimit-reset': '9',
         }
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 429)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 5)
@@ -239,13 +239,13 @@ class TestRest(unittest.TestCase):
             'x-ratelimit-reset': '9',
         }
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 429)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 0)
@@ -266,13 +266,13 @@ class TestRest(unittest.TestCase):
             'x-ratelimit-reset': '9',
         }
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.get('the/url')
 
         self.assertEqual(context.exception.status_code, 429)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
-        self.assertIsInstance(context.exception, RateLimitError)
+        self.assertIsInstance(context.exception, RateLimitException)
         self.assertEqual(context.exception.reset_at, 9)
 
         self.assertEqual(rc._metrics['retries'], 10)
@@ -350,7 +350,7 @@ class TestRest(unittest.TestCase):
 
         mock_post.return_value.status_code = 200
         response = rc.post('the/url', data=data)
-        mock_post.assert_called_with('the/url', data=j_data, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_post.assert_called_with('the/url', data=j_data, headers=headers, timeout=self.TIMEOUT_DEF, verify=True)
 
         self.assertEqual(response, {'a': 'b'})
 
@@ -363,11 +363,11 @@ class TestRest(unittest.TestCase):
                                       ' "message": "message"}'
         mock_post.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.post('the-url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     @mock.patch('requests.post')
@@ -381,11 +381,11 @@ class TestRest(unittest.TestCase):
         })
         mock_post.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.post('the-url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'error')
 
     @mock.patch('requests.post')
@@ -398,11 +398,11 @@ class TestRest(unittest.TestCase):
         })
         mock_post.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.post('the-url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, '')
 
     @mock.patch('requests.post')
@@ -417,11 +417,11 @@ class TestRest(unittest.TestCase):
         })
         mock_post.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.post('the-url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     @mock.patch('requests.post')
@@ -433,11 +433,11 @@ class TestRest(unittest.TestCase):
             mock_post.return_value.text = '{"errorCode": "e0",' \
                                           '"message": "desc"}'
 
-            with self.assertRaises(PriceCypherError) as context:
+            with self.assertRaises(HttpException) as context:
                 rc.post('the-url')
 
             self.assertEqual(context.exception.status_code, error_status)
-            self.assertEqual(context.exception.error_code, 'e0')
+            self.assertEqual(context.exception.code, 'e0')
             self.assertEqual(context.exception.message, 'desc')
 
     @mock.patch('requests.post')
@@ -448,11 +448,11 @@ class TestRest(unittest.TestCase):
             mock_post.return_value.status_code = error_status
             mock_post.return_value.text = '{"message": "desc"}'
 
-            with self.assertRaises(PriceCypherError) as context:
+            with self.assertRaises(HttpException) as context:
                 rc.post('the-url')
 
             self.assertEqual(context.exception.status_code, error_status)
-            self.assertEqual(context.exception.error_code, 'pricecypher.sdk.internal.unknown')
+            self.assertEqual(context.exception.code, 'pricecypher.sdk.internal.unknown')
             self.assertEqual(context.exception.message, 'desc')
 
     @mock.patch('requests.post')
@@ -463,11 +463,11 @@ class TestRest(unittest.TestCase):
             mock_post.return_value.status_code = error_status
             mock_post.return_value.text = 'there has been a terrible error'
 
-            with self.assertRaises(PriceCypherError) as context:
+            with self.assertRaises(HttpException) as context:
                 rc.post('the-url')
 
             self.assertEqual(context.exception.status_code, error_status)
-            self.assertEqual(context.exception.error_code, 'pricecypher.sdk.internal.unknown')
+            self.assertEqual(context.exception.code, 'pricecypher.sdk.internal.unknown')
             self.assertEqual(context.exception.message, 'there has been a terrible error')
 
     @mock.patch('requests.post')
@@ -478,11 +478,11 @@ class TestRest(unittest.TestCase):
             mock_post.return_value.status_code = error_status
             mock_post.return_value.text = None
 
-            with self.assertRaises(PriceCypherError) as context:
+            with self.assertRaises(HttpException) as context:
                 rc.post('the-url')
 
             self.assertEqual(context.exception.status_code, error_status)
-            self.assertEqual(context.exception.error_code, 'pricecypher.sdk.internal.unknown')
+            self.assertEqual(context.exception.code, 'pricecypher.sdk.internal.unknown')
             self.assertEqual(context.exception.message, '')
 
     @mock.patch('requests.post')
@@ -497,7 +497,8 @@ class TestRest(unittest.TestCase):
 
         rc.file_post('the-url', data=data, files=files)
 
-        mock_post.assert_called_once_with('the-url', data=data, files=files, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_post.assert_called_once_with('the-url', data=data, files=files, headers=headers, timeout=self.TIMEOUT_DEF,
+                                          verify=True)
 
     @mock.patch('requests.put')
     def test_put(self, mock_put):
@@ -510,7 +511,7 @@ class TestRest(unittest.TestCase):
         data = {'some': 'data'}
 
         response = rc.put(url='the-url', data=data)
-        mock_put.assert_called_with('the-url', json=data, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_put.assert_called_with('the-url', json=data, headers=headers, timeout=self.TIMEOUT_DEF, verify=True)
 
         self.assertEqual(response, ['a', 'b'])
 
@@ -523,11 +524,11 @@ class TestRest(unittest.TestCase):
                                      ' "message": "message"}'
         mock_put.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.put(url='the/url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     @mock.patch('requests.patch')
@@ -541,7 +542,7 @@ class TestRest(unittest.TestCase):
         data = {'some': 'data'}
 
         response = rc.patch(url='the-url', data=data)
-        mock_patch.assert_called_with('the-url', json=data, headers=headers, timeout=self.TIMEOUT_DEF)
+        mock_patch.assert_called_with('the-url', json=data, headers=headers, timeout=self.TIMEOUT_DEF, verify=True)
 
         self.assertEqual(response, ['a', 'b'])
 
@@ -554,11 +555,11 @@ class TestRest(unittest.TestCase):
                                        ' "message": "message"}'
         mock_patch.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.patch(url='the/url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     @mock.patch('requests.delete')
@@ -570,7 +571,8 @@ class TestRest(unittest.TestCase):
         mock_delete.return_value.status_code = 200
 
         response = rc.delete(url='the-url/ID')
-        mock_delete.assert_called_with('the-url/ID', headers=headers, params={}, json=None, timeout=self.TIMEOUT_DEF)
+        mock_delete.assert_called_with('the-url/ID', headers=headers, params={}, json=None, timeout=self.TIMEOUT_DEF,
+                                       verify=True)
 
         self.assertEqual(response, ['a', 'b'])
 
@@ -586,7 +588,8 @@ class TestRest(unittest.TestCase):
         params = {'A': 'param', 'B': 'param'}
 
         response = rc.delete(url='the-url/ID', params=params, data=data)
-        mock_del.assert_called_with('the-url/ID', headers=headers, params=params, json=data, timeout=self.TIMEOUT_DEF)
+        mock_del.assert_called_with('the-url/ID', headers=headers, params=params, json=data, timeout=self.TIMEOUT_DEF,
+                                    verify=True)
 
         self.assertEqual(response, ['a', 'b'])
 
@@ -599,11 +602,11 @@ class TestRest(unittest.TestCase):
                                         ' "message": "message"}'
         mock_delete.return_value.status_code = 999
 
-        with self.assertRaises(PriceCypherError) as context:
+        with self.assertRaises(HttpException) as context:
             rc.delete(url='the-url')
 
         self.assertEqual(context.exception.status_code, 999)
-        self.assertEqual(context.exception.error_code, 'code')
+        self.assertEqual(context.exception.code, 'code')
         self.assertEqual(context.exception.message, 'message')
 
     def test_disabled_telemetry(self):

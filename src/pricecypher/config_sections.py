@@ -1,6 +1,6 @@
-from pricecypher.endpoints import ConfigEndpoint
-from pricecypher.models import ConfigSection
-from pricecypher.rest import RestClient
+from .endpoints import ConfigEndpoint
+from .models import ConfigSection
+from .rest import RestClient
 
 
 class ConfigSections(object):
@@ -16,7 +16,7 @@ class ConfigSections(object):
         (defaults to None)
     """
 
-    """ Default user-tool base URL """
+    """ Default config service base URL """
     default_config_base = 'https://config.pricecypher.com'
 
     def __init__(self, bearer_token, dataset_id, config_base=None, rest_options=None):
@@ -26,23 +26,30 @@ class ConfigSections(object):
         self._rest_options = rest_options
         self._client = RestClient(jwt=bearer_token, options=rest_options)
 
-    def index(self) -> list[ConfigSection]:
+    def index(self, environment=None) -> list[ConfigSection]:
         """
         List all available config sections for the dataset.
 
+        :param str environment: (Optional) environment of the underlying data intake to query. Defaults to latest.
         :return: list of config sections.
         :rtype list[ConfigSection]
         """
-        return ConfigEndpoint(self._client, self._dataset_id, self._config_base).sections().index()
+        return ConfigEndpoint(self._client, self._dataset_id, self._config_base) \
+            .sections() \
+            .index(environment=environment)
 
-    def get_parsed_section(self, section_key) -> dict:
+    def get_parsed_section(self, section_key, environment=None) -> dict:
         """
         Retrieves the config section by the given key, and parses the contained key-value pairs into a single dict.
 
+        :param str section_key: The key of the section to fetch.
+        :param str environment: (Optional) environment of the underlying data intake to query. Defaults to latest.
         :return: Dictionary of all key-value pairs in the given section, or an empty dict if no such section exists.
         :rtype: dict Mapping config keys (str) to config values (any).
         """
-        section = ConfigEndpoint(self._client, self._dataset_id, self._config_base).sections().get(section_key)
+        section = ConfigEndpoint(self._client, self._dataset_id, self._config_base) \
+            .sections() \
+            .get(section_key, environment=environment)
 
         if section is None:
             return {}

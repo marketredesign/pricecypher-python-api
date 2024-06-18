@@ -1,7 +1,7 @@
 import dataclasses
-import numpy as np
-
 from json import JSONEncoder
+
+import numpy as np
 
 
 class PriceCypherJsonEncoder(JSONEncoder):
@@ -9,7 +9,9 @@ class PriceCypherJsonEncoder(JSONEncoder):
     JSON encoder that can properly serialize dataclasses and numpy numbers.
     """
     def default(self, obj):
-        if dataclasses.is_dataclass(obj):
+        if isinstance(obj, set):
+            return list(obj)
+        elif dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
         elif isinstance(obj, np.integer):
             return int(obj)

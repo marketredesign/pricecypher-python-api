@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Callable
 
-from pricecypher.contracts import Script, TestSuite
+from pricecypher.dataclasses import TestSuite
+from pricecypher.enums import AccessTokenGrantType
+from .script import Script
 
 
 class QualityTestScript(Script, ABC):
@@ -11,7 +13,11 @@ class QualityTestScript(Script, ABC):
         used in a generalized yet controlled setting.
     """
 
-    def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str], user_input: dict[Any: Any]) -> Any:
+    def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
+        return {AccessTokenGrantType.CLIENT_CREDENTIALS}
+
+    def execute(self, business_cell_id: Optional[int], get_bearer_token: Callable[[], str],
+                user_input: dict[Any: Any]) -> Any:
         return self.execute_tests(business_cell_id, get_bearer_token)
 
     @abstractmethod

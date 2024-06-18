@@ -1,6 +1,6 @@
-from pricecypher.endpoints.base_endpoint import BaseEndpoint
 from pricecypher.models import Scope, ScopeValue, TransactionSummary, TransactionsPage
 from pricecypher.rest import RestClient
+from .base_endpoint import BaseEndpoint
 
 
 class DatasetsEndpoint(BaseEndpoint):
@@ -19,6 +19,7 @@ class DatasetsEndpoint(BaseEndpoint):
         self.dataset_id = dataset_id
         self.base_url = dss_base
         self.client = RestClient(jwt=bearer_token, options=rest_options)
+        self.param_keys = {'intake_status', 'environment'}
 
     def business_cell(self, bc_id='all'):
         """
@@ -26,13 +27,13 @@ class DatasetsEndpoint(BaseEndpoint):
         :param str bc_id: (optional) Business cell ID.
             (defaults to 'all')
         :return: Business cell endpoint
-        :rtype: BusinessCellEndpoint
+        :rtype: _BusinessCellEndpoint
         """
         url = self._url(['api/datasets', self.dataset_id, 'business_cells', bc_id])
-        return BusinessCellEndpoint(self.client, url)
+        return _BusinessCellEndpoint(self.client, url)
 
 
-class BusinessCellEndpoint(BaseEndpoint):
+class _BusinessCellEndpoint(BaseEndpoint):
     """
     Business cell specific endpoints in dataset service.
     """
@@ -43,19 +44,19 @@ class BusinessCellEndpoint(BaseEndpoint):
     def scopes(self):
         """
         Scope endpoints in dataset service.
-        :rtype: ScopesEndpoint
+        :rtype: _ScopesEndpoint
         """
-        return ScopesEndpoint(self.client, self._url('scopes'))
+        return _ScopesEndpoint(self.client, self._url('scopes'))
 
     def transactions(self):
         """
         Transaction endpoints in dataset service.
-        :rtype: TransactionsEndpoint
+        :rtype: _TransactionsEndpoint
         """
-        return TransactionsEndpoint(self.client, self._url('transactions'))
+        return _TransactionsEndpoint(self.client, self._url('transactions'))
 
 
-class ScopesEndpoint(BaseEndpoint):
+class _ScopesEndpoint(BaseEndpoint):
     """
     Scope endpoints in dataset service.
     """
@@ -63,35 +64,28 @@ class ScopesEndpoint(BaseEndpoint):
         self.client = client
         self.base_url = base
 
-    def index(self, intake_status=None):
+    def index(self, **kwargs):
         """
         Show a list of all scopes of the dataset.
-        :param intake_status: (Optional) intake status to fetch the scopes for.
+        :key intake_status: (Optional) intake status to fetch the scopes for.
+        :key environment: (Optional) environment of the underlying data intake to query. Defaults to latest intake.
         :rtype: list[Scope]
         """
-        params = {}
-        if intake_status is not None:
-            # NB: DSS does not (yet) use this parameter, but we send it already for a future release.
-            params['intake_status'] = intake_status
-        return self.client.get(self._url(), params=params, schema=Scope.Schema(many=True))
+        return self.client.get(self._url(), params=self._find_request_params(**kwargs), schema=Scope.Schema(many=True))
 
-    def scope_values(self, scope_id, intake_status=None):
+    def scope_values(self, scope_id, **kwargs):
         """
         Get all scope values for the given scope of the dataset.
         :param scope_id: Scope to get scope values for.
-        :param intake_status: (Optional) intake status to fetch the scope values for.
+        :key intake_status: (Optional) intake status to fetch the scope values for.
+        :key environment: (Optional) environment of the underlying data intake to query. Defaults to latest intake.
         :rtype: list[ScopeValue]
         """
         url = self._url([scope_id, 'scope_values'])
-        params = {}
-
-        if intake_status is not None:
-            params['intake_status'] = intake_status
-
-        return self.client.get(url, params=params, schema=ScopeValue.Schema(many=True))
+        return self.client.get(url, params=self._find_request_params(**kwargs), schema=ScopeValue.Schema(many=True))
 
 
-class TransactionsEndpoint(BaseEndpoint):
+class _TransactionsEndpoint(BaseEndpoint):
     """
     Transaction endpoints in dataset service.
     """
@@ -122,13 +116,12 @@ class TransactionsEndpoint(BaseEndpoint):
 
         return transactions
 
-    def summary(self, intake_status=None):
+    def summary(self, **kwargs):
         """
         Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
-        :param intake_status: (Optional) intake status to fetch the summary for.
+        :key intake_status: (Optional) intake status to fetch the summary for.
+        :key environment: (Optional) environment of the underlying data intake to query. Defaults to latest intake.
         :rtype: TransactionSummary
         """
-        params = {}
-        if intake_status is not None:
-            params['intake_status'] = intake_status
-        return self.client.get(self._url('summary'), params=params, schema=TransactionSummary.Schema())
+        url = self._url('summary')
+        return self.client.get(url, params=self._find_request_params(**kwargs), schema=TransactionSummary.Schema())

@@ -1,6 +1,6 @@
-from pricecypher.endpoints.base_endpoint import BaseEndpoint
 from pricecypher.models import Dataset
 from pricecypher.rest import RestClient
+from .base_endpoint import BaseEndpoint
 
 
 class UsersEndpoint(BaseEndpoint):
@@ -21,12 +21,12 @@ class UsersEndpoint(BaseEndpoint):
     def datasets(self):
         """
         Dataset endpoints in user tool API.
-        :rtype: DatasetsEndpoint
+        :rtype: _DatasetsEndpoint
         """
-        return DatasetsEndpoint(self.client, self._url('api/datasets'))
+        return _DatasetsEndpoint(self.client, self._url('api/datasets'))
 
 
-class DatasetsEndpoint(BaseEndpoint):
+class _DatasetsEndpoint(BaseEndpoint):
     """
     PriceCypher dataset endpoints in user tool API.
     """

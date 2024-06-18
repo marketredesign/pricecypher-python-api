@@ -8,7 +8,7 @@ from time import sleep
 import requests
 from marshmallow import Schema, EXCLUDE
 
-from .exceptions import PriceCypherError, RateLimitError
+from .exceptions import HttpException, RateLimitException
 
 UNKNOWN_ERROR = 'pricecypher.sdk.internal.unknown'
 
@@ -85,7 +85,7 @@ class RestClientOptions(object):
         (defaults to 300.0 (5 minutes) for both)
     :param int retries: (optional) In the event an API request returns a 429 response header (indicating rate-limit
         has been hit), the RestClient will retry the request this many times using an exponential backoff strategy,
-        before raising a RateLimitError exception.
+        before raising a RateLimitException.
         (defaults to 3)
     """
 
@@ -113,7 +113,7 @@ class RestClient(object):
         RestClient options, such as rate-limit retries.
     """
 
-    def __init__(self, jwt, options=None):
+    def __init__(self, jwt, options: RestClientOptions = None):
         if options is None:
             options = RestClientOptions()
 
@@ -175,8 +175,8 @@ class RestClient(object):
                 # No Retry After header. Apply an exponential backoff for subsequent attempts, using this formula:
                 # max(
                 #   MIN_REQUEST_RETRY_DELAY,
-                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_between(1, MAX_REQUEST_RETRY_JITTER))
-                # )
+                #   min(MAX_REQUEST_RETRY_DELAY, (100ms * (2 ** attempt - 1)) + random_bet(1, MAX_REQUEST_RETRY_JITTER))
+                # )`
 
                 # Increases base delay by (100ms * (2 ** attempt - 1))
                 wait = 100 * 2 ** (attempt - 1)
@@ -279,15 +279,13 @@ class Response(object):
 
     def content(self):
         if self._is_error():
+            msg = self._error_message()
+
             if self._status_code == 429:
                 reset_at = int(self._headers.get('x-ratelimit-reset', '-1'))
-                raise RateLimitError(error_code=self._error_code(),
-                                     message=self._error_message(),
-                                     reset_at=reset_at)
+                raise RateLimitException(message=msg, error_code=self._error_code(), reset_at=reset_at)
 
-            raise PriceCypherError(status_code=self._status_code,
-                                   error_code=self._error_code(),
-                                   message=self._error_message())
+            raise HttpException(message=msg, status_code=self._status_code, error_code=self._error_code())
         else:
             return self._content
 

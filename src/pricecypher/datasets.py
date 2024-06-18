@@ -2,8 +2,9 @@ from datetime import datetime
 
 from pandas import DataFrame
 
-from pricecypher.collections import ScopeCollection, ScopeValueCollection
-from pricecypher.endpoints import DatasetsEndpoint, UsersEndpoint
+from .collections import ScopeCollection
+from .collections import ScopeValueCollection
+from .endpoints import DatasetsEndpoint, UsersEndpoint
 
 
 class Datasets(object):
@@ -74,7 +75,7 @@ class Datasets(object):
         """
         return next((d for d in self.index() if d.id == dataset_id), None)
 
-    def get_scopes(self, dataset_id, bc_id='all', intake_status=None):
+    def get_scopes(self, dataset_id, bc_id='all', intake_status=None, environment=None):
         """
         Get all scopes for the given dataset.
 
@@ -82,6 +83,7 @@ class Datasets(object):
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
         :param str intake_status: (Optional) If specified, the scopes are fetched of the last intake with this status.
+        :param str environment: (Optional) environment of the underlying data intake to query. Defaults to latest.
         :return: Collection of scopes for the given dataset.
         :rtype: ScopeCollection
         """
@@ -91,10 +93,10 @@ class Datasets(object):
             DatasetsEndpoint(self._bearer, dataset_id, self._get_dss_base(dataset_id), self._rest_options)
             .business_cell(bc_id)
             .scopes()
-            .index(intake_status)
+            .index(intake_status=intake_status, environment=environment)
         )
 
-    def get_scope_values(self, dataset_id, scope_id, bc_id='all', intake_status=None):
+    def get_scope_values(self, dataset_id, scope_id, bc_id='all', intake_status=None, environment=None):
         """
         Get all scopes values for the given scope within the given dataset.
 
@@ -103,6 +105,7 @@ class Datasets(object):
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
         :param str intake_status: (Optional) If specified, the values are fetched of the last intake with this status.
+        :param str environment: (Optional) environment of the underlying data intake to query. Defaults to latest.
         :return: Collection of scope values for the given scope within the given dataset.
         :rtype: ScopeValueCollection
         """
@@ -113,10 +116,10 @@ class Datasets(object):
             DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options)
             .business_cell(bc_id)
             .scopes()
-            .scope_values(scope_id, intake_status)
+            .scope_values(scope_id, intake_status=intake_status, environment=environment)
         )
 
-    def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None):
+    def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None, environment=None):
         """
         Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
 
@@ -124,6 +127,7 @@ class Datasets(object):
         :param str bc_id: (optional) business cell ID.
             (defaults to 'all')
         :param str intake_status: (Optional) If specified, the summary is fetched of the last intake with this status.
+        :param str environment: (Optional) environment of the underlying data intake to query. Defaults to latest.
         :return: Summary of the transactions.
         :rtype: TransactionSummary
         """
@@ -133,29 +137,26 @@ class Datasets(object):
         return DatasetsEndpoint(self._bearer, dataset_id, dss_base, self._rest_options) \
             .business_cell(bc_id) \
             .transactions() \
-            .summary(intake_status)
+            .summary(intake_status=intake_status, environment=environment)
 
     def get_transactions(
-        self,
-        dataset_id,
-        aggregate,
-        columns,
-        start_date_time=None,
-        end_date_time=None,
-        bc_id='all',
-        filters=[],
-        intake_status=None,
-        filter_transaction_ids=None,
-        dataset_environment=None,
+            self,
+            dataset_id,
+            aggregate,
+            columns,
+            start_date_time=None,
+            end_date_time=None,
+            bc_id='all',
+            filters=None,
+            intake_status=None,
+            filter_transaction_ids=None,
+            dataset_environment=None,
     ):
         """
         Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
         parameter. The desired columns, as well as filters and aggregation methods, can be specified.
 
         :param int dataset_id: Dataset to retrieve transactions for.
-        :param param dataset_environment: Key specifying the "environment" of the underlying data intake to query. 
-            Use `None` (the default) to query transactions from the latest intake, regardless of the associated 
-            environment with that intake.
         :param bool aggregate: If true, the transactions will be grouped on all categorical columns that have no
             aggregation method specified.
         :param list columns: Desired columns in the resulting dataframe. Each column must be a dict. Each column must
@@ -175,6 +176,9 @@ class Datasets(object):
             selected when fetching transactions and, hence, won't be included in the grouping when aggregating.
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
+        :param param dataset_environment: Key specifying the "environment" of the underlying data intake to query.
+            Use `None` (the default) to query transactions from the latest intake, regardless of the associated 
+            environment with that intake.
         :return: Dataframe of transactions.
         :rtype: DataFrame
         """
@@ -195,7 +199,7 @@ class Datasets(object):
         # NB: the two separate lists of scope value ids are destructured and put in a set. This removes duplicates.
         filter_scope_value_ids = {
             *self._find_scope_value_filters(columns_with_values),
-            *self._get_additional_scope_value_filter_ids(filters, dataset_id),
+            *self._get_additional_scope_value_filter_ids(filters or [], dataset_id),
         }
 
         # Find all aggregation methods to be sent to the dataset service.
