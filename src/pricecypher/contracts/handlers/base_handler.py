@@ -31,7 +31,7 @@ class BaseHandler(ABC):
 
     def __init__(self, dataset_id: int, settings: HandlerSettings, config: dict[str, dict[str, Any]]):
         """
-        :param dataset_id:
+        :param dataset_id: ID of the dataset this handler instance is for.
         :param settings: Context / environment-specific key-value settings pairs.
         :param config: Dataset-specific configuration values. Required config keys must be specified by implementing the
             get_config_dependencies function.
