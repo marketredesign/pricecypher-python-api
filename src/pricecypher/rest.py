@@ -141,6 +141,10 @@ class RestClient(object):
     def MIN_REQUEST_RETRY_DELAY(self):
         return 100
 
+    # Returns HTTP status codes on which to attempt retries
+    def RETRIABLE_STATUS_CODES(self):
+        return [408, 425, 429, 502, 503, 504]
+
     def _retry(self, make_request):
         # Track the API request attempt number
         attempt = 0
@@ -158,7 +162,7 @@ class RestClient(object):
             # Issue the request
             response = make_request()
 
-            if response.status_code != 429:
+            if response.status_code not in self.RETRIABLE_STATUS_CODES():
                 break
 
             # Try to find Retry After header in response, which specifies the number of seconds we should wait.
