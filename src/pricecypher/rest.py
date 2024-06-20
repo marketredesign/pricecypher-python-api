@@ -143,7 +143,7 @@ class RestClient(object):
 
     # Returns HTTP status codes on which to attempt retries
     def RETRIABLE_STATUS_CODES(self):
-        return [429, 502]
+        return [408, 425, 429, 502, 503, 504]
 
     def _retry(self, make_request):
         # Track the API request attempt number
