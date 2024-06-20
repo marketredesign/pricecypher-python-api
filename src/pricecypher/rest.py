@@ -140,7 +140,7 @@ class RestClient(object):
     # Returns the minimum delay window allowed (100ms)
     def MIN_REQUEST_RETRY_DELAY(self):
         return 100
-    
+
     # Returns HTTP status codes on which to attempt retries
     def RETRIABLE_STATUS_CODES(self):
         return [429, 502]
