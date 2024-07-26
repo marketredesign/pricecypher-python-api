@@ -77,8 +77,10 @@ class Transaction:
     volume: float
     price: float
     date_time: datetime
-    currency: str
+    currency: Optional[str]
+    currencies: Optional[List[str]]
     unit: Optional[str]
+    units: Optional[List[str]]
     scope_values: List[ScopeValueTransaction]
     scope_constants: List[ScopeConstantTransaction]
 
@@ -94,7 +96,9 @@ class Transaction:
             'price': self.price,
             'date_time': self.date_time,
             'currency': self.currency,
+            'currencies': self.currencies,
             'unit': self.unit,
+            'units': self.units,
         }
 
         for scope_value in self.scope_values:
