@@ -109,3 +109,4 @@ requirements.txt
 
 # pbr
 /ChangeLog
+local/
