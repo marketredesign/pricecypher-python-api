@@ -2,6 +2,8 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from pricecypher.storage.azure_blob_settings import AzureBlobSettings
+
 
 @dataclass(kw_only=True)
 class HandlerSettings:
@@ -12,11 +14,13 @@ class HandlerSettings:
     path_local_out: Optional[str] = None
     path_remote_out_base: Optional[str] = None
     path_remote_out_prefix: Optional[str] = None
+    azure_blob_settings: Optional[AzureBlobSettings] = None
 
     def __post_init__(self):
         self.base_users = self.base_users or os.environ.get('BASE_USERS', 'https://users.pricecypher.com')
         self.base_config = self.base_config or os.environ.get('BASE_CONFIG', 'https://config.pricecypher.com')
         self.base_scripts = self.base_scripts or os.environ.get('BASE_SCRIPTS', 'https://scripts.pricecypher.com')
+        self.azure_blob_settings = self.azure_blob_settings or AzureBlobSettings()
 
     def __getitem__(self, key):
         return super().__getattribute__(key)

@@ -20,8 +20,9 @@ class FileStorage(ABC):
     _path_local: str
     _path_remote_base: str
     _path_remote_prefix: str
+    _transport_params: dict
 
-    def __init__(self, path_local: str, path_remote_base: str, path_remote_prefix: str):
+    def __init__(self, path_local: str, path_remote_base: str, path_remote_prefix: str) -> None:
         """
         :param path_local: Path on local filesystem where artifacts should be stored. We assume these artifacts are
             eventually uploaded to a remote location.
@@ -34,6 +35,23 @@ class FileStorage(ABC):
         self._path_local = path_local
         self._path_remote_base = path_remote_base
         self._path_remote_prefix = path_remote_prefix
+
+    def _setup_transport_params(self, settings: HandlerSettings) -> None:
+        self._transport_params = dict()
+
+        if not self._path_remote_base.startswith('azure://'):
+            return
+
+        account_url = settings.azure_blob_settings.account_url
+
+        if account_url is None:
+            raise Exception('Azure Blob account URL must be set when using azure remote base.')
+
+        from azure.identity import DefaultAzureCredential
+        from azure.storage.blob import BlobServiceClient
+
+        client = BlobServiceClient(account_url=account_url, credential=DefaultAzureCredential())
+        self._transport_params['client'] = client
 
     def get_path_local(self, filename: str) -> str:
         return os.path.join(self._path_local, filename)
@@ -87,7 +105,7 @@ class FileStorage(ABC):
             logging.debug("Making non-existing directories on the path to parent of `file_path_local`...")
             Path(local).parent.mkdir(parents=True, exist_ok=True)
 
-        with smart_open.open(local, mode) as file:
+        with smart_open.open(local, mode, transport_params=self._transport_params) as file:
             yield file
 
     @contextmanager
@@ -106,9 +124,12 @@ class FileStorage(ABC):
 
         logging.debug(f"Loading / opening (remote) file at path '{path}'...")
 
-        with smart_open.open(path, mode) as file:
+        with smart_open.open(path, mode, transport_params=self._transport_params) as file:
             yield file
 
     @classmethod
     def from_handler_settings(cls: Type[FileStorage], settings: HandlerSettings) -> FileStorage:
-        return cls(settings.path_local_out, settings.path_remote_out_base, settings.path_remote_out_prefix)
+        storage = cls(settings.path_local_out, settings.path_remote_out_base, settings.path_remote_out_prefix)
+        storage._setup_transport_params(settings)
+
+        return storage
