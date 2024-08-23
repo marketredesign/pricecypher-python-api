@@ -39,7 +39,7 @@ class FileStorage(ABC):
     def _setup_transport_params(self, settings: HandlerSettings) -> None:
         self._transport_params = dict()
 
-        if not self._path_remote_base.startswith('azure://'):
+        if self._path_remote_base is None or not self._path_remote_base.startswith('azure://'):
             return
 
         account_url = settings.azure_blob_settings.account_url

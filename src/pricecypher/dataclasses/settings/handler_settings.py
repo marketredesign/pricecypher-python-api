@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-from pricecypher.storage.azure_blob_settings import AzureBlobSettings
+from .azure_blob_settings import AzureBlobSettings
 
 
 @dataclass(kw_only=True)
