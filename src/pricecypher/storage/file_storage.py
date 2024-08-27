@@ -6,12 +6,14 @@ import re
 from abc import ABC
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Type, Union
+from typing import Type, Union, Optional
 
 import smart_open
 
 from pricecypher.dataclasses import HandlerSettings
+from pricecypher.dataclasses.settings.remote_storage_settings import RemoteStorageSettings
 from pricecypher.exceptions import InvalidStateException
+from pricecypher.storage.transport_params_factory import create_transport_params
 
 p_has_url_proto = re.compile('(.+)://(.+)')
 
@@ -20,8 +22,15 @@ class FileStorage(ABC):
     _path_local: str
     _path_remote_base: str
     _path_remote_prefix: str
+    _remote_storage_settings: RemoteStorageSettings
 
-    def __init__(self, path_local: str, path_remote_base: str, path_remote_prefix: str):
+    def __init__(
+            self,
+            path_local: str,
+            path_remote_base: str,
+            path_remote_prefix: str,
+            remote_storage_settings: RemoteStorageSettings = None,
+    ) -> None:
         """
         :param path_local: Path on local filesystem where artifacts should be stored. We assume these artifacts are
             eventually uploaded to a remote location.
@@ -34,6 +43,7 @@ class FileStorage(ABC):
         self._path_local = path_local
         self._path_remote_base = path_remote_base
         self._path_remote_prefix = path_remote_prefix
+        self._remote_storage_settings = remote_storage_settings or RemoteStorageSettings()
 
     def get_path_local(self, filename: str) -> str:
         return os.path.join(self._path_local, filename)
@@ -52,7 +62,7 @@ class FileStorage(ABC):
         return os.path.join(self._path_remote_base, suffix)
 
     @classmethod
-    def get_scheme(cls, uri_as_string):
+    def get_scheme(cls, uri_as_string) -> Optional[str]:
         uri = smart_open.parse_uri(uri_as_string)
         return uri.scheme if hasattr(uri, 'scheme') else None
 
@@ -80,14 +90,16 @@ class FileStorage(ABC):
             raise InvalidStateException("The `path_local_outputs` and `path_local_outputs` must be set to save files.")
 
         local = self.get_path_local(filename)
+        scheme = self.get_scheme(local)
+        transport_params = create_transport_params(self._remote_storage_settings, scheme)
 
         logging.info(f"Saving file, local path = '{local}', remote path = '{self.get_path_remote(filename)}'...")
 
-        if self.get_scheme(local) == 'file':
+        if scheme == 'file':
             logging.debug("Making non-existing directories on the path to parent of `file_path_local`...")
             Path(local).parent.mkdir(parents=True, exist_ok=True)
 
-        with smart_open.open(local, mode) as file:
+        with smart_open.open(local, mode, transport_params=transport_params) as file:
             yield file
 
     @contextmanager
@@ -98,17 +110,26 @@ class FileStorage(ABC):
         :param path: Either an absolute path to a (remote) file, or a relative path from the remote file store.
         :param mode: (Optional) Mimicks the `mode` parameter of the built-in `open` function. Defaults to 'r'.
         """
+        scheme = self.get_scheme(path)
+
         if isinstance(path, Path):
             path = path.as_posix()
 
-        if self.get_scheme(path) == 'file' and not Path(path).is_absolute():
+        if scheme == 'file' and not Path(path).is_absolute():
             path = self.get_path_remote(path)
+
+        transport_params = create_transport_params(self._remote_storage_settings, scheme)
 
         logging.debug(f"Loading / opening (remote) file at path '{path}'...")
 
-        with smart_open.open(path, mode) as file:
+        with smart_open.open(path, mode, transport_params=transport_params) as file:
             yield file
 
     @classmethod
     def from_handler_settings(cls: Type[FileStorage], settings: HandlerSettings) -> FileStorage:
-        return cls(settings.path_local_out, settings.path_remote_out_base, settings.path_remote_out_prefix)
+        return cls(
+            path_local=settings.path_local_out,
+            path_remote_base=settings.path_remote_out_base,
+            path_remote_prefix=settings.path_remote_out_prefix,
+            remote_storage_settings=settings.remote_storage_settings,
+        )
