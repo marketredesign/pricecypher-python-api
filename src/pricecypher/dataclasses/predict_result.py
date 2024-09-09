@@ -30,3 +30,4 @@ class PredictResult:
     predictive_values: PredictValues
     predictive_steps: list[PredictStep]
     accuracy: Accuracy
+    version: Optional[str]
