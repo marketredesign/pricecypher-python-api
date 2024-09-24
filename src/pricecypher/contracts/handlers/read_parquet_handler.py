@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Any
 
 import pandas as pd
+import pyarrow as pa
 
 from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
@@ -10,7 +11,7 @@ from pricecypher.oidc import AccessTokenGenerator
 from pricecypher.storage import FileStorage
 
 
-class DataFrameHandler(BaseHandler):
+class ReadParquetHandler(BaseHandler):
     """
     The top-level, abstract BaseHandler class serves as an interaction contract such that by extending it with its
         methods implemented, any (event) handler script can be created that can be used in a generalized yet controlled
@@ -65,10 +66,10 @@ class DataFrameHandler(BaseHandler):
             provided by the caller of the script.
         :return: Any json-serializable task results / outputs.
         """
-        input_df = self._read_df(user_input.get('path_in'))
-        output_df = self.process(input_df)
+        input_table = self._read_parquet(user_input.get('path_in'))
+        output_df = self.process(input_table)
         return self._write_df(user_input.get('path_out'), output_df)
 
     @abstractmethod
-    def process(self, df: pd.DataFrame) -> pd.DataFrame:
+    def process(self, table: pa.Table) -> pd.DataFrame:
         raise NotImplementedError

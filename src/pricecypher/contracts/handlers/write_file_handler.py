@@ -10,7 +10,7 @@ from pricecypher.oidc import AccessTokenGenerator
 from pricecypher.storage import FileStorage
 
 
-class DataFrameHandler(BaseHandler):
+class WriteFileHandler(BaseHandler):
     """
     The top-level, abstract BaseHandler class serves as an interaction contract such that by extending it with its
         methods implemented, any (event) handler script can be created that can be used in a generalized yet controlled
@@ -66,9 +66,9 @@ class DataFrameHandler(BaseHandler):
         :return: Any json-serializable task results / outputs.
         """
         input_df = self._read_df(user_input.get('path_in'))
-        output_df = self.process(input_df)
-        return self._write_df(user_input.get('path_out'), output_df)
+        output_string = self.process(input_df)
+        return self._write_file(user_input.get('path_out'), output_string)
 
     @abstractmethod
-    def process(self, df: pd.DataFrame) -> pd.DataFrame:
+    def process(self, df: pd.DataFrame) -> str:
         raise NotImplementedError

@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+import os
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -91,3 +96,75 @@ class BaseHandler(ABC):
         :return: Any json-serializable task results / outputs.
         """
         raise NotImplementedError
+
+    def _read_file(self, path_in: str) -> str:
+        """
+        Read a string file from path_in, using FileStorage.
+        :param path_in: the path to read from.
+        :return: the file contents.
+        """
+        with self._file_storage.load(path_in, mode='r') as file:
+            return file.read()
+
+    def _write_file(self, path_out: str, string: str) -> str:
+        """
+        Write a string to a file, using FileStorage.
+        :param path_out: the path to write the file to.
+        :param string: the string to write to the file.
+        :return: the remote storage path.
+        """
+        self._create_folders(path_out)
+        with self._file_storage.save(path_out, mode='w') as f:
+            f.write(string)
+        return self._file_storage.get_path_remote(path_out)
+
+    def _read_df(self, path_in: str) -> pd.DataFrame:
+        """
+        Read a DataFrame pickle from path_in, using FileStorage.
+        :param path_in: the path to read from.
+        :return: the DataFrame.
+        """
+        with self._file_storage.load(path_in, mode='rb') as f:
+            return pd.read_pickle(f)
+
+    def _write_df(self, path_out: str, df: pd.DataFrame) -> str:
+        """
+        Write a DataFrame to a pickle, using FileStorage.
+        :param path_out: the path to write the pickle to.
+        :param df: the DataFrame to store.
+        :return: the remote storage path.
+        """
+        self._create_folders(path_out)
+        with self._file_storage.save(path_out, mode='wb') as f:
+            pd.to_pickle(df, f)
+        return self._file_storage.get_path_remote(path_out)
+
+    def _read_parquet(self, path_in: str) -> pa.Table:
+        """
+        Read a parquet file from path_in, using FileStorage.
+        :param path_in: the path to read from.
+        :return: the DataFrame.
+        """
+        with self._file_storage.load(path_in, mode='rb') as f:
+            return pq.read_table(f)
+
+    def _write_parquet(self, path_out: str, table: pa.Table) -> str:
+        """
+        Write a parquet file, using FileStorage.
+        :param path_out: the path to write the parquet file to.
+        :param table: the Table to store.
+        :return: the remote storage path.
+        """
+        self._create_folders(path_out)
+        with self._file_storage.save(path_out, mode='wb') as f:
+            pq.write_table(table, f)
+        return self._file_storage.get_path_remote(path_out)
+
+    def _create_folders(self, path: str) -> None:
+        """
+        Create the folders in path if they don't exist.
+        :param path:
+        """
+        pathdir = os.path.dirname(path)
+        if not os.path.exists(pathdir):
+            os.makedirs(pathdir)
