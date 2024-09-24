@@ -1,9 +1,9 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -31,31 +31,6 @@ class DataFrameHandler(BaseHandler):
     _config: dict[str, dict[str, Any]]
     _token_generator: AccessTokenGenerator
     _file_storage: FileStorage
-
-    def __init__(self, dataset_id: int, settings: HandlerSettings, config: dict[str, dict[str, Any]]):
-        """
-        :param dataset_id: ID of the dataset this handler instance is for.
-        :param settings: Context / environment-specific key-value settings pairs.
-        :param config: Dataset-specific configuration values. Required config keys must be specified by implementing the
-            get_config_dependencies function.
-            NB: The config dict of a given instance are assumed to satisfy the config dependencies only when the
-            `handle` function is being executed on that given instance.
-        """
-        # self._dataset_id = dataset_id
-        self._settings = settings
-        # self._config = config
-        self._file_storage = FileStorage.from_handler_settings(self._settings)
-
-    def set_token_generator(self, token_generator: AccessTokenGenerator):
-        self._token_generator = token_generator
-
-    def _get_access_token(self):
-        """
-        Retrieve a (possibly newly issued) access token that should be used for all requests to the PriceCypher Engine.
-        NB: Depending on the specific type of handler subclass, this could either generate a new machine-to-machine
-        token or return a (static) access token for a specific user requesting the task execution.
-        """
-        return self._token_generator.generate()
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
         """
@@ -90,18 +65,21 @@ class DataFrameHandler(BaseHandler):
             provided by the caller of the script.
         :return: Any json-serializable task results / outputs.
         """
-        filename = user_input.get('filename', None)
-        if filename is None:
+        path_in: Optional[str] = user_input.get('path_in', None)
+        path_out: Optional[str] = user_input.get('path_out', None)
+        if path_in is None or path_out is None:
             raise 'TODO'
 
-        with self._file_storage.load(filename) as f:
+        with self._file_storage.load(path_in, 'rb') as f:
             df = pd.read_pickle(f)
 
         df_processed = self.process_df(df)
 
-        with self._file_storage.save(filename) as f:
+        with self._file_storage.save(path_out, 'wb') as f:
             pd.to_pickle(df_processed, f)
+
+        return self._file_storage.get_path_remote(path_out)
 
     @abstractmethod
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        self.handle()
+        raise NotImplementedError
