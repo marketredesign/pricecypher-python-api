@@ -1,8 +1,8 @@
-from abc import abstractmethod
-from typing import Any
-
 import pandas as pd
 import pyarrow as pa
+
+from abc import abstractmethod
+from typing import Any
 
 from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
@@ -66,9 +66,9 @@ class ReadParquetHandler(BaseHandler):
             provided by the caller of the script.
         :return: Any json-serializable task results / outputs.
         """
-        input_table = self._read_parquet(user_input.get('path_in'))
+        input_table = self._file_storage.read_parquet(user_input.get('path_in'))
         output_df = self.process(input_table)
-        return self._write_df(user_input.get('path_out'), output_df)
+        return self._file_storage.write_df(user_input.get('path_out'), output_df)
 
     @abstractmethod
     def process(self, table: pa.Table) -> pd.DataFrame:

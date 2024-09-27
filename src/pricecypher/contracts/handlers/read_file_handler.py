@@ -1,7 +1,7 @@
+import pandas as pd
+
 from abc import abstractmethod
 from typing import Any
-
-import pandas as pd
 
 from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
@@ -65,9 +65,9 @@ class ReadFileHandler(BaseHandler):
             provided by the caller of the script.
         :return: Any json-serializable task results / outputs.
         """
-        input_string = self._read_file(user_input.get('path_in'))
+        input_string = self._file_storage.read_file(user_input.get('path_in'))
         output_df = self.process(input_string)
-        return self._write_df(user_input.get('path_out'), output_df)
+        return self._file_storage.write_df(user_input.get('path_out'), output_df)
 
     @abstractmethod
     def process(self, file_string: str) -> pd.DataFrame:
