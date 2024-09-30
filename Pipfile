@@ -14,7 +14,6 @@ pbr = "~=6.0"
 pyarrow = "~=17.0.0"
 requests = "~=2.14"
 smart_open = { version = "~=7.0", extras = ["s3", "azure"] }
-typeguard = ">=2.13"
 
 [dev-packages]
 build = "~=1.2"
