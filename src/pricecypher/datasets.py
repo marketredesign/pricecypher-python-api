@@ -2,14 +2,12 @@ from datetime import datetime
 
 from pandas import DataFrame
 
-from .collections import ScopeCollection
-from .collections import ScopeValueCollection
+from .collections import ScopeCollection, ScopeValueCollection
 from .endpoints import DatasetsEndpoint, UsersEndpoint
 
 
 class Datasets(object):
-    """
-    Datasets API. Exposes all available operations on datasets, like fetching the available datasets, listing
+    """Datasets API. Exposes all available operations on datasets, like fetching the available datasets, listing
     the scopes within a dataset, retrieving transactions within a dataset, etc.
 
     :param str bearer_token: Bearer token for PriceCypher (logical) API. Needs 'read:datasets' scope.
@@ -22,8 +20,8 @@ class Datasets(object):
         (defaults to None)
     """
 
-    """ 
-    Default intake status to fetch when fetching transaction info, or None to let the dataset service decide. 
+    """
+    Default intake status to fetch when fetching transaction info, or None to let the dataset service decide.
     NB: Can be set statically with Datasets.default_dss_intake_status = '...'
     """
     default_dss_intake_status = None
@@ -39,8 +37,7 @@ class Datasets(object):
         self._all_meta = None
 
     def _get_dss_base(self, dataset_id):
-        """
-        Get dataset service url base for the given dataset ID.
+        """Get dataset service url base for the given dataset ID.
         Will be fetched from dataset META if no dss_base present.
 
         :param int dataset_id: Dataset ID to get base URL for.
@@ -54,8 +51,7 @@ class Datasets(object):
         return self.get_meta(dataset_id).dss_url
 
     def index(self):
-        """
-        List all available datasets the user has access to.
+        """List all available datasets the user has access to.
         Response is cached in this instance for as long as this instance lives.
 
         :return: list of datasets.
@@ -67,8 +63,7 @@ class Datasets(object):
         return self._all_meta
 
     def get_meta(self, dataset_id):
-        """
-        Get metadata like the dataset service url and time of creation of a dataset
+        """Get metadata like the dataset service url and time of creation of a dataset
 
         :param dataset_id: Dataset to get metadata for.
         :rtype: Dataset
@@ -76,8 +71,7 @@ class Datasets(object):
         return next((d for d in self.index() if d.id == dataset_id), None)
 
     def get_scopes(self, dataset_id, bc_id='all', intake_status=None, environment=None):
-        """
-        Get all scopes for the given dataset.
+        """Get all scopes for the given dataset.
 
         :param int dataset_id: Dataset to retrieve scopes for.
         :param str bc_id: (optional) business cell ID.
@@ -97,8 +91,7 @@ class Datasets(object):
         )
 
     def get_scope_values(self, dataset_id, scope_id, bc_id='all', intake_status=None, environment=None):
-        """
-        Get all scopes values for the given scope within the given dataset.
+        """Get all scopes values for the given scope within the given dataset.
 
         :param int dataset_id: Dataset to retrieve scope values for.
         :param int scope_id: Scope to retrieve scope values for.
@@ -120,8 +113,7 @@ class Datasets(object):
         )
 
     def get_transaction_summary(self, dataset_id, bc_id='all', intake_status=None, environment=None):
-        """
-        Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
+        """Get a summary of the transactions. Contains the first and last date of any transaction in the dataset.
 
         :param int dataset_id: Dataset to retrieve summary for.
         :param str bc_id: (optional) business cell ID.
@@ -140,20 +132,19 @@ class Datasets(object):
             .summary(intake_status=intake_status, environment=environment)
 
     def get_transactions(
-            self,
-            dataset_id,
-            aggregate,
-            columns,
-            start_date_time=None,
-            end_date_time=None,
-            bc_id='all',
-            filters=None,
-            intake_status=None,
-            filter_transaction_ids=None,
-            dataset_environment=None,
+        self,
+        dataset_id,
+        aggregate,
+        columns,
+        start_date_time=None,
+        end_date_time=None,
+        bc_id='all',
+        filters=None,
+        intake_status=None,
+        filter_transaction_ids=None,
+        dataset_environment=None,
     ):
-        """
-        Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
+        """Display a listing of transactions as a dataframe. The transactions can be grouped or not, using the aggregate
         parameter. The desired columns, as well as filters and aggregation methods, can be specified.
 
         :param int dataset_id: Dataset to retrieve transactions for.
@@ -177,7 +168,7 @@ class Datasets(object):
         :param str intake_status: (Optional) If specified, transactions are fetched from the last intake of this status.
         :param list filter_transaction_ids: (Optional) If specified, only transactions with these IDs are considered.
         :param param dataset_environment: Key specifying the "environment" of the underlying data intake to query.
-            Use `None` (the default) to query transactions from the latest intake, regardless of the associated 
+            Use `None` (the default) to query transactions from the latest intake, regardless of the associated
             environment with that intake.
         :return: Dataframe of transactions.
         :rtype: DataFrame
@@ -251,8 +242,7 @@ class Datasets(object):
         return DataFrame.from_records([t.to_dict(scope_keys) for t in transactions])
 
     def _get_additional_scope_value_filter_ids(self, filters, dataset_id):
-        """
-        Finds all scope value IDs within the given filters, as a list of scope value IDs.
+        """Finds all scope value IDs within the given filters, as a list of scope value IDs.
 
         :param list[dict] filters: List of filters. Each filter must be a dict with `scope_id` and `values` properties.
             The `values` property must be either a str or a list of strs.
@@ -270,8 +260,7 @@ class Datasets(object):
         return scope_value_ids
 
     def _add_scopes(self, dataset_id, columns, bc_id='all'):
-        """
-        Find the scope for each provided column and return new list of columns with scope information stored inside.
+        """Find the scope for each provided column and return new list of columns with scope information stored inside.
 
         :param int dataset_id: Dataset ID to retrieve scopes for.
         :param list[dict] columns: Each column should be a dict with either a `scope_id`, `representation`
@@ -302,8 +291,7 @@ class Datasets(object):
         return list(map(add_scope, columns))
 
     def _add_scope_values(self, dataset_id, column, bc_id='all'):
-        """
-        Add scope values to the given column.
+        """Add scope values to the given column.
 
         :param int dataset_id: Dataset ID to retrieve scope values for.
         :param dict column: Column with `scope` property, for which scope values should be retrieved.
@@ -321,8 +309,7 @@ class Datasets(object):
         return {**column, 'scope_values': scope_values}
 
     def _find_scope_value_filters(self, columns):
-        """
-        Find all filters that have been defined in the given columns, as a list of scope value IDs.
+        """Find all filters that have been defined in the given columns, as a list of scope value IDs.
 
         :param list[dict] columns: For all columns that have a `filter` and `scope_values` property, the scope values
             to be filtered will be collected.
@@ -345,8 +332,7 @@ class Datasets(object):
         return filters
 
     def _find_aggregation_methods(self, columns):
-        """
-        Find all aggregation methods that have been defined in the given columns, as a list of dicts where each dict
+        """Find all aggregation methods that have been defined in the given columns, as a list of dicts where each dict
         contains a `scope_id` and `method`.
 
         :param list[dict] columns: For all columns that have an `aggregate` and `scope` property, the aggregation
@@ -372,8 +358,7 @@ class Datasets(object):
         return aggregation_methods
 
     def _find_scope_keys(self, columns):
-        """
-        Find the keys that have been defined for all scopes in the given columns. Assumes that all columns have a
+        """Find the keys that have been defined for all scopes in the given columns. Assumes that all columns have a
         `scope` property set.
 
         :param list[dict] columns: For all columns, find the scope ID and which key should be used for that scope.
