@@ -3,7 +3,7 @@ import pandas as pd
 from abc import abstractmethod
 from typing import Any
 
-from .base_handler import BaseHandler
+from pricecypher.contracts import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -12,18 +12,11 @@ from pricecypher.storage import FileStorage
 
 class DataFrameHandler(BaseHandler):
     """
-    The top-level, abstract BaseHandler class serves as an interaction contract such that by extending it with its
-        methods implemented, any (event) handler script can be created that can be used in a generalized yet controlled
-        setting.
-    NB: This is the most general task handler. Hence, it is intended to be executable in all available runtimes. So
-        for (possibly) long-running tasks during e.g. an intake workflow, as well as more "real-time" tasks like
-        handling an HTTP request, and any other type of task that might be needed in the future.
-        In general, this generic BaseHandler as well as (most of) its subclasses intend to abstract away from the
-        specific source of the event that triggers the task execution. To that end, a "runtime" has to be defined once
-        for each possible event source (e.g. HTTP request, Argo workflow step, Kafka event message, etc.). Such runtime
-        should be able to execute any handler that implements (a subclass of) this BaseHandler class.
-        Please see the subclasses of this BaseHandler for a given, specific, task at hand since using the most specific
-        handler contract should simplify the specific handler implementation.
+    The abstract DataFrameHandler class provides a base for mutating a pandas DataFrame.
+    Extend this class and override the `process()` method when you want to run a data science script on the DataFrame
+    and add the results to it (as extra columns).
+    The input DataFrame should be available as a pickle at the `path_in` location. The output DataFrame will be stored
+    as a pickle at the `path_out` location.
     """
 
     _dataset_id: int
@@ -33,42 +26,38 @@ class DataFrameHandler(BaseHandler):
     _file_storage: FileStorage
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
-        """
-        Defines the allowed access token grant types of (the children of) this event handler class.
-        """
         return set()
 
     def get_config_dependencies(self) -> dict[str, list[str]]:
-        """
-        Fetch the configuration sections and keys in the sections that the script will use that are not yet provided.
-
-        NB: It is not needed to return all required sections and keys, only at least one that has not been provided yet.
-        If all required config is provided, an empty dictionary is to be returned.
-
-        NBB: Note that this allows for a dynamic config dependency. I.e., this enables a task handler to determine
-        which parts of the configuration are required based on the concrete values that are configured as part of the
-        rest of that same configuration. On the other hand, a "static" config dependency can simply be expressed by
-        returning the difference between the desired static config and the given config dict within this instance.
-
-        :return: dictionary mapping from section key (string) to a (potentially empty) list of keys of that section
-            that the script requires additionally.
-        """
         return dict()
 
     def handle(self, user_input: dict[str, Any]) -> any:
         """
         Handle the given `user_input`.
+        Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output pandas DataFrame will be
+        stored as a pickle at the `path_out` location.
 
-        NB: All required config dependencies are assumed to be present.
-
-        :param user_input: Dictionary of additional json-serializable input provided as input to the task being handled,
-            provided by the caller of the script.
-        :return: Any json-serializable task results / outputs.
+        :param user_input: requires `path_in` and `path_out`.
+        :return: the remote storage path.
+        :raise RuntimeError: when the number of rows of the output is not equal to the input.
         """
         input_df = self._file_storage.read_df(user_input.get('path_in'))
+        num_rows_input = input_df.shape[0]
         output_df = self.process(input_df)
+        num_rows_output = output_df.shape[0]
+        if not num_rows_output == num_rows_input:
+            raise RuntimeError(f"Output DataFrame ({num_rows_input} rows) should have the same number of rows as input \
+                DataFrame ({num_rows_output} rows)")
         return self._file_storage.write_df(user_input.get('path_out'), output_df)
 
     @abstractmethod
     def process(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Override to implement and run a data science (or other) script on the input DataFrame.
+        Add the results of the script as one or more extra columns.
+        The output DataFrame should have the same number of rows as the input DataFrame.
+
+        :param df: the input DataFrame.
+        :return: the resulting DataFrame.
+        """
         raise NotImplementedError

@@ -11,7 +11,7 @@ numpy = ">=1.18"
 oic = "~=1.7"
 pandas = ">=1.4"
 pbr = "~=6.0"
-pyarrow = "~=17.0.0"
+pyarrow = "~=17.0"
 requests = "~=2.14"
 smart_open = { version = "~=7.0", extras = ["s3", "azure"] }
 

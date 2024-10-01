@@ -67,7 +67,7 @@ class FileStorage(ABC):
     @classmethod
     def get_scheme(cls, uri_as_string) -> Optional[str]:
         uri = smart_open.parse_uri(uri_as_string)
-        return uri.scheme if hasattr(uri, 'scheme') else None
+        return uri.scheme if hasattr(uri, 'scheme') else 'file'
 
     def get_scheme_local(self, filename: str) -> str:
         return self.get_scheme(self.get_path_local(filename))
@@ -100,7 +100,7 @@ class FileStorage(ABC):
 
         if scheme == 'file':
             logging.debug("Making non-existing directories on the path to parent of `file_path_local`...")
-            Path(local).parent.mkdir(parents=True, exist_ok=True)
+            Path(local).parent.mkdir(parents=False, exist_ok=True)
 
         with smart_open.open(local, mode, transport_params=transport_params) as file:
             yield file
@@ -137,30 +137,29 @@ class FileStorage(ABC):
             remote_storage_settings=settings.remote_storage_settings,
         )
 
-    def read_file(self, path_in: str) -> str:
+    def read_string(self, path_in: str) -> str:
         """
-        Read a string file from path_in, using FileStorage.
+        Read a string file from path_in.
         :param path_in: the path to read from.
         :return: the file contents.
         """
         with self.load(path_in, mode='r') as f:
             return f.read()
 
-    def write_file(self, path_out: str, string: str) -> str:
+    def write_string(self, path_out: str, string: str) -> str:
         """
-        Write a string to a file, using FileStorage.
+        Write a string to a file.
         :param path_out: the path to write the file to.
         :param string: the string to write to the file.
         :return: the remote storage path.
         """
-        self._create_folders(path_out)
         with self.save(path_out, mode='w') as f:
             f.write(string)
         return self.get_path_remote(path_out)
 
     def read_df(self, path_in: str) -> pd.DataFrame:
         """
-        Read a DataFrame pickle from path_in, using FileStorage.
+        Read a DataFrame pickle from path_in.
         :param path_in: the path to read from.
         :return: the DataFrame.
         """
@@ -169,19 +168,18 @@ class FileStorage(ABC):
 
     def write_df(self, path_out: str, df: pd.DataFrame) -> str:
         """
-        Write a DataFrame to a pickle, using FileStorage.
+        Write a DataFrame to a pickle.
         :param path_out: the path to write the pickle to.
         :param df: the DataFrame to store.
         :return: the remote storage path.
         """
-        self._create_folders(path_out)
         with self.save(path_out, mode='wb') as f:
             pd.to_pickle(df, f)
         return self.get_path_remote(path_out)
 
     def read_parquet(self, path_in: str) -> pa.Table:
         """
-        Read a parquet file from path_in, using FileStorage.
+        Read a parquet file from path_in.
         :param path_in: the path to read from.
         :return: the DataFrame.
         """
@@ -190,21 +188,11 @@ class FileStorage(ABC):
 
     def write_parquet(self, path_out: str, table: pa.Table) -> str:
         """
-        Write a parquet file, using FileStorage.
+        Write a parquet file.
         :param path_out: the path to write the parquet file to.
         :param table: the Table to store.
         :return: the remote storage path.
         """
-        self._create_folders(path_out)
         with self.save(path_out, mode='wb') as f:
             pq.write_table(table, f)
         return self.get_path_remote(path_out)
-
-    def _create_folders(self, path: str) -> None:
-        """
-        Create the folders in path if they don't exist.
-        :param path:
-        """
-        pathdir = os.path.dirname(path)
-        if not os.path.exists(pathdir):
-            os.makedirs(pathdir)
