@@ -4,7 +4,7 @@ import pyarrow as pa
 from abc import abstractmethod
 from typing import Any
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -48,8 +48,7 @@ class ReadParquetHandler(BaseHandler):
     @abstractmethod
     def process(self, table: pa.Table) -> pd.DataFrame:
         """
-        Override to implement and transform a pyarrow Table, read from the parquet file at the `path_in` location passed
-        in the `handle()` method, into a pandas DataFrame.
+        Override to implement and transform a pyarrow Table (read from the input parquet file) into a pandas DataFrame.
 
         :param table: the input pyarrow Table.
         :return: the resulting DataFrame.

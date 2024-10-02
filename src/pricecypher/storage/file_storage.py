@@ -137,62 +137,62 @@ class FileStorage(ABC):
             remote_storage_settings=settings.remote_storage_settings,
         )
 
-    def read_string(self, path_in: str) -> str:
+    def read_string(self, path: str) -> str:
         """
         Read a string file from path_in.
-        :param path_in: the path to read from.
+        :param path: the path to read from.
         :return: the file contents.
         """
-        with self.load(path_in, mode='r') as f:
+        with self.load(path, mode='r') as f:
             return f.read()
 
-    def write_string(self, path_out: str, string: str) -> str:
+    def write_string(self, path: str, string: str) -> str:
         """
         Write a string to a file.
-        :param path_out: the path to write the file to.
+        :param path: the path to write the file to.
         :param string: the string to write to the file.
         :return: the remote storage path.
         """
-        with self.save(path_out, mode='w') as f:
+        with self.save(path, mode='w') as f:
             f.write(string)
-        return self.get_path_remote(path_out)
+        return self.get_path_remote(path)
 
-    def read_df(self, path_in: str) -> pd.DataFrame:
+    def read_df(self, path: str) -> pd.DataFrame:
         """
         Read a DataFrame pickle from path_in.
-        :param path_in: the path to read from.
+        :param path: the path to read from.
         :return: the DataFrame.
         """
-        with self.load(path_in, mode='rb') as f:
+        with self.load(path, mode='rb') as f:
             return pd.read_pickle(f)
 
-    def write_df(self, path_out: str, df: pd.DataFrame) -> str:
+    def write_df(self, path: str, df: pd.DataFrame) -> str:
         """
         Write a DataFrame to a pickle.
-        :param path_out: the path to write the pickle to.
+        :param path: the path to write the pickle to.
         :param df: the DataFrame to store.
         :return: the remote storage path.
         """
-        with self.save(path_out, mode='wb') as f:
+        with self.save(path, mode='wb') as f:
             pd.to_pickle(df, f)
-        return self.get_path_remote(path_out)
+        return self.get_path_remote(path)
 
-    def read_parquet(self, path_in: str) -> pa.Table:
+    def read_parquet(self, path: str) -> pa.Table:
         """
         Read a parquet file from path_in.
-        :param path_in: the path to read from.
+        :param path: the path to read from.
         :return: the DataFrame.
         """
-        with self.load(path_in, mode='rb') as f:
+        with self.load(path, mode='rb') as f:
             return pq.read_table(f)
 
-    def write_parquet(self, path_out: str, table: pa.Table) -> str:
+    def write_parquet(self, path: str, table: pa.Table) -> str:
         """
         Write a parquet file.
-        :param path_out: the path to write the parquet file to.
+        :param path: the path to write the parquet file to.
         :param table: the Table to store.
         :return: the remote storage path.
         """
-        with self.save(path_out, mode='wb') as f:
+        with self.save(path, mode='wb') as f:
             pq.write_table(table, f)
-        return self.get_path_remote(path_out)
+        return self.get_path_remote(path)

@@ -4,7 +4,7 @@ import pyarrow as pa
 from abc import abstractmethod
 from typing import Any
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator

@@ -1,7 +1,11 @@
+import json
+import pandas as pd
+
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pricecypher.dataclasses import HandlerSettings
+from pricecypher.dataclasses import HandlerSettings, TestSuite
+from pricecypher.encoders import PriceCypherJsonEncoder
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
 from pricecypher.storage import FileStorage
@@ -91,3 +95,18 @@ class BaseHandler(ABC):
         :return: Any json-serializable task results / outputs.
         """
         raise NotImplementedError
+
+    def _write_metadata(self, path: str, metadata: list[TestSuite]) -> any:
+        """
+        Serializes metadata and stores to given path.
+        :param path: the path to store the metadata to.
+        :param metadata: should be serializable by PriceCypherJsonEncoder.
+        :return: the remote storage path.
+        """
+        json_metadata = json.dumps(metadata, cls=PriceCypherJsonEncoder)
+        return self._file_storage.write_string(path, json_metadata)
+
+    def _guard_num_rows(self, df: pd.DataFrame, num_rows: int) -> None:
+        num_rows_df = df.shape[0]
+        if not num_rows_df == num_rows:
+            raise RuntimeError(f"DataFrame should have {num_rows} rows, but has {num_rows_df}")

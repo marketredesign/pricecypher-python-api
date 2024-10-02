@@ -1,12 +1,10 @@
-import json
 import pandas as pd
 
 from abc import abstractmethod
 from typing import Any
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings, TestSuite
-from pricecypher.encoders import PriceCypherJsonEncoder
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
 from pricecypher.storage import FileStorage
@@ -39,15 +37,15 @@ class DataReportHandler(BaseHandler):
         Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output json will be
         stored at the `path_out` location.
 
-        :param user_input: requires `path_in` and `path_out`.
+        :param user_input: requires `path_in`, `path_out` and `path_metadata_out`.
         :return: the remote storage path.
         """
         input_df = self._file_storage.read_df(user_input.get('path_in'))
-        output_report_json = json.dumps(self.process(input_df), cls=PriceCypherJsonEncoder)
-        return self._file_storage.write_string(user_input.get('path_out'), output_report_json)
+        self._write_metadata(user_input.get('path_metadata_out'), self.process(input_df))
+        return self._file_storage.write_df(user_input.get('path_out'), input_df)
 
     @abstractmethod
-    def process(self, df: pd.DataFrame) -> TestSuite:
+    def process(self, df: pd.DataFrame) -> list[TestSuite]:
         """
         Override to implement and run data checks on the input DataFrame.
 

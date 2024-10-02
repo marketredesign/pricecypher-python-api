@@ -1,5 +1,5 @@
-from .handlers import BaseHandler, DataFrameHandler, DataReportHandler, InferenceHandler, ReadFileHandler, \
-    ReadParquetHandler, WriteFileHandler, WriteParquetHandler
+from .handlers import BaseHandler, DataFrameHandler, DataReportHandler, InferenceHandler, ReadParquetHandler, \
+    ReadStringHandler, WriteParquetHandler, WriteStringHandler
 from .scripts import QualityTestScript, ScopeScript, Script
 
 __all__ = [
@@ -8,10 +8,10 @@ __all__ = [
     'DataReportHandler',
     'InferenceHandler',
     'QualityTestScript',
-    'ReadFileHandler',
     'ReadParquetHandler',
+    'ReadStringHandler',
     'ScopeScript',
     'Script',
-    'WriteFileHandler',
     'WriteParquetHandler',
+    'WriteStringHandler',
 ]

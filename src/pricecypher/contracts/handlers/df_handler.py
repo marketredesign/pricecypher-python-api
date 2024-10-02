@@ -3,7 +3,7 @@ import pandas as pd
 from abc import abstractmethod
 from typing import Any
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -44,10 +44,7 @@ class DataFrameHandler(BaseHandler):
         input_df = self._file_storage.read_df(user_input.get('path_in'))
         num_rows_input = input_df.shape[0]
         output_df = self.process(input_df)
-        num_rows_output = output_df.shape[0]
-        if not num_rows_output == num_rows_input:
-            raise RuntimeError(f"Output DataFrame ({num_rows_input} rows) should have the same number of rows as input \
-                DataFrame ({num_rows_output} rows)")
+        self._guard_num_rows(output_df, num_rows_input)
         return self._file_storage.write_df(user_input.get('path_out'), output_df)
 
     @abstractmethod

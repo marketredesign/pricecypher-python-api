@@ -3,7 +3,7 @@ import pandas as pd
 from abc import abstractmethod
 from typing import Any
 
-from pricecypher.contracts import BaseHandler
+from .base_handler import BaseHandler
 from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
 from pricecypher.oidc import AccessTokenGenerator
@@ -46,8 +46,7 @@ class ReadStringHandler(BaseHandler):
     @abstractmethod
     def process(self, file_string: str) -> pd.DataFrame:
         """
-        Override to implement and transform a string, read from the file at the `path_in` location passed in the
-        `handle()` method, into a pandas DataFrame.
+        Override to implement and transform a string (read from the input string file) into a pandas DataFrame.
 
         :param file_string: the input string.
         :return: the resulting DataFrame.
