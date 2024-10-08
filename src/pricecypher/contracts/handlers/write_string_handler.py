@@ -1,28 +1,18 @@
-import pandas as pd
-
 from abc import abstractmethod
 from typing import Any
 
+import pandas as pd
+
 from .base_handler import BaseHandler
-from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
-from pricecypher.oidc import AccessTokenGenerator
-from pricecypher.storage import FileStorage
 
 
 class WriteStringHandler(BaseHandler):
-    """
-    The abstract WriteStringHandler class provides a base to write a pandas DataFrame to a string file.
+    """The abstract WriteStringHandler class provides a base to write a pandas DataFrame to a string file.
     Extend this class and override the `process()` method when you want to do exactly that.
     The input DataFrame file should be available as a pickle at the `path_in` location. The output string file will be
     stored at the `path_out` location.
     """
-
-    _dataset_id: int
-    _settings: HandlerSettings
-    _config: dict[str, dict[str, Any]]
-    _token_generator: AccessTokenGenerator
-    _file_storage: FileStorage
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
         return set()
@@ -31,8 +21,7 @@ class WriteStringHandler(BaseHandler):
         return dict()
 
     def handle(self, user_input: dict[str, Any]) -> any:
-        """
-        Handle the given `user_input`.
+        """Handle the given `user_input`.
         Needs a DataFrame stored as a pickle at the `path_in` location. The output string will be stored at the
         `path_out` location.
 
@@ -45,8 +34,7 @@ class WriteStringHandler(BaseHandler):
 
     @abstractmethod
     def process(self, df: pd.DataFrame) -> str:
-        """
-        Override to implement and transform a pandas DataFrame into a string, which will be stored as a file at the
+        """Override to implement and transform a pandas DataFrame into a string, which will be stored as a file at the
         `path_out` location passed in the `handle()` method.
 
         :param df: the input DataFrame.

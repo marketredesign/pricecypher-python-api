@@ -1,29 +1,19 @@
-import pandas as pd
-
 from abc import abstractmethod
 from typing import Any
 
+import pandas as pd
+
 from .base_handler import BaseHandler
-from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
-from pricecypher.oidc import AccessTokenGenerator
-from pricecypher.storage import FileStorage
 
 
 class DataFrameHandler(BaseHandler):
-    """
-    The abstract DataFrameHandler class provides a base for mutating a pandas DataFrame.
+    """The abstract DataFrameHandler class provides a base for mutating a pandas DataFrame.
     Extend this class and override the `process()` method when you want to run a data science script on the DataFrame
     and add the results to it (as extra columns).
     The input DataFrame should be available as a pickle at the `path_in` location. The output DataFrame will be stored
     as a pickle at the `path_out` location.
     """
-
-    _dataset_id: int
-    _settings: HandlerSettings
-    _config: dict[str, dict[str, Any]]
-    _token_generator: AccessTokenGenerator
-    _file_storage: FileStorage
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
         return set()
@@ -32,8 +22,7 @@ class DataFrameHandler(BaseHandler):
         return dict()
 
     def handle(self, user_input: dict[str, Any]) -> any:
-        """
-        Handle the given `user_input`.
+        """Handle the given `user_input`.
         Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output pandas DataFrame will be
         stored as a pickle at the `path_out` location.
 
@@ -49,8 +38,7 @@ class DataFrameHandler(BaseHandler):
 
     @abstractmethod
     def process(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Override to implement and run a data science (or other) script on the input DataFrame.
+        """Override to implement and run a data science (or other) script on the input DataFrame.
         Add the results of the script as one or more extra columns.
         The output DataFrame should have the same number of rows as the input DataFrame.
 

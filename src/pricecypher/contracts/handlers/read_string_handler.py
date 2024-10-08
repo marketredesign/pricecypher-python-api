@@ -1,28 +1,18 @@
-import pandas as pd
-
 from abc import abstractmethod
 from typing import Any
 
+import pandas as pd
+
 from .base_handler import BaseHandler
-from pricecypher.dataclasses import HandlerSettings
 from pricecypher.enums import AccessTokenGrantType
-from pricecypher.oidc import AccessTokenGenerator
-from pricecypher.storage import FileStorage
 
 
 class ReadStringHandler(BaseHandler):
-    """
-    The abstract ReadStringHandler class provides a base to read a file with string contents into a pandas DataFrame.
+    """The abstract ReadStringHandler class provides a base to read a file with string contents into a pandas DataFrame.
     Extend this class and override the `process()` method when you want to do exactly that.
     The input string file should be available at the `path_in` location. The output DataFrame will be
     stored as a pickle at the `path_out` location.
     """
-
-    _dataset_id: int
-    _settings: HandlerSettings
-    _config: dict[str, dict[str, Any]]
-    _token_generator: AccessTokenGenerator
-    _file_storage: FileStorage
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
         return set()
@@ -31,8 +21,7 @@ class ReadStringHandler(BaseHandler):
         return dict()
 
     def handle(self, user_input: dict[str, Any]) -> any:
-        """
-        Handle the given `user_input`.
+        """Handle the given `user_input`.
         Needs a string file stored at the `path_in` location. The output pandas DataFrame will be stored as a pickle at
         the `path_out` location.
 
@@ -45,8 +34,7 @@ class ReadStringHandler(BaseHandler):
 
     @abstractmethod
     def process(self, file_string: str) -> pd.DataFrame:
-        """
-        Override to implement and transform a string (read from the input string file) into a pandas DataFrame.
+        """Override to implement and transform a string (read from the input string file) into a pandas DataFrame.
 
         :param file_string: the input string.
         :return: the resulting DataFrame.
