@@ -36,7 +36,7 @@ class ReadParquetHandler(BaseHandler):
 
     @abstractmethod
     def process(self, table: pa.Table) -> pd.DataFrame:
-        """Override to implement and transform a pyarrow Table (read from the input parquet file) into a pandas DataFrame.
+        """Override with a transformation from a pyarrow Table (read from input parquet file) into a pandas DataFrame.
 
         :param table: the input pyarrow Table.
         :return: the resulting DataFrame.

@@ -48,7 +48,7 @@ class BaseHandler(ABC):
         self._token_generator = token_generator
 
     def _get_access_token(self):
-        """Retrieve a (possibly newly issued) access token that should be used for all requests to the PriceCypher Engine.
+        """Retrieve a (possibly newly issued) access token that should be used for all requests to PriceCypher Engine.
         NB: Depending on the specific type of handler subclass, this could either generate a new machine-to-machine
         token or return a (static) access token for a specific user requesting the task execution.
         """
