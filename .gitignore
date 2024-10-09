@@ -110,3 +110,6 @@ requirements.txt
 # pbr
 /ChangeLog
 local/
+
+# MacOS
+.DS_Store
