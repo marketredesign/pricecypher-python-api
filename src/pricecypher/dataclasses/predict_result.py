@@ -7,15 +7,15 @@ from pricecypher.enums import Accuracy
 @dataclass(frozen=True)
 class PredictValues:
     predictive_price: float
-    max_predictive_range: Optional[float]
-    min_predictive_range: Optional[float]
+    max_predictive_range: Optional[float] = None
+    min_predictive_range: Optional[float] = None
 
 
 @dataclass(frozen=True)
 class PredictStep:
     key: str
     value: float
-    order: Optional[int]
+    order: Optional[int] = None
 
 
 @dataclass(frozen=True)
@@ -30,4 +30,4 @@ class PredictResult:
     predictive_values: PredictValues
     predictive_steps: list[PredictStep]
     accuracy: Accuracy
-    version: Optional[str]
+    version: Optional[str] = None
