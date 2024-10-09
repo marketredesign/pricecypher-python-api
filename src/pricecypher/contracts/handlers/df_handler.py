@@ -40,7 +40,8 @@ class DataFrameHandler(BaseHandler):
     def process(self, df: pd.DataFrame) -> pd.DataFrame:
         """Override to implement and run a data science (or other) script on the input DataFrame.
         Add the results of the script as one or more extra columns.
-        The output DataFrame should have the same number of rows as the input DataFrame.
+        The output DataFrame should have the same number of rows as the input DataFrame, unless explicitly overruled by
+        overriding the `_guard_num_rows()` function.
 
         :param df: the input DataFrame.
         :return: the resulting DataFrame.

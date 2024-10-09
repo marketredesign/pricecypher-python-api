@@ -91,5 +91,5 @@ class BaseHandler(ABC):
 
     def _guard_num_rows(self, df: pd.DataFrame, num_rows: int) -> None:
         num_rows_df = df.shape[0]
-        if not num_rows_df == num_rows:
+        if num_rows_df != num_rows:
             raise RuntimeError(f"DataFrame should have {num_rows} rows, but has {num_rows_df}")

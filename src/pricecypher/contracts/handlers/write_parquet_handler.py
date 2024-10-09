@@ -33,12 +33,11 @@ class WriteParquetHandler(BaseHandler):
         output_table = self.process(input_df)
         return self._file_storage.write_parquet(user_input.get('path_out'), output_table)
 
-    @abstractmethod
     def process(self, df: pd.DataFrame) -> pa.Table:
-        """Override to implement and transform a pandas DataFrame into a pyarrow Table, which will be stored as parquet
-        file at the `path_out` location passed in the `handle()` method.
+        """Transform the pandas DataFrame into a pyarrow table.
+        The table will be stored as parquet file at the `path_out` location passed in the `handle()` method.
 
         :param df: the input DataFrame.
         :return: the resulting pyarrow Table.
         """
-        raise NotImplementedError
+        return pa.Table.from_pandas(df)

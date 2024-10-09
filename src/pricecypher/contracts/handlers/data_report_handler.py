@@ -13,7 +13,8 @@ class DataReportHandler(BaseHandler):
     Extend this class and override the `process()` method when you want to receive a DataFrame and do data checks on
     it.
     The input DataFrame should be available as a pickle at the `path_in` location. The output TestSuite will be stored
-    as a json file to the `path_out` location.
+    as a json file at the `path_metadata_out` location. For consistency the (unaltered) input DataFrame is stored at the
+    `path_out` location as well.
     """
 
     def get_allowed_access_token_grant_types(self) -> set[AccessTokenGrantType]:
@@ -24,8 +25,8 @@ class DataReportHandler(BaseHandler):
 
     def handle(self, user_input: dict[str, Any]) -> any:
         """Handle the given `user_input`.
-        Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output json will be
-        stored at the `path_out` location.
+        Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output json will be stored at the
+        `path_metadata_out` location. For consistency the (unaltered) input DataFrame is stored at `path_out` as well.
 
         :param user_input: requires `path_in`, `path_out` and `path_metadata_out`.
         :return: the remote storage path.

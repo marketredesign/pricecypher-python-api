@@ -34,11 +34,11 @@ class ReadParquetHandler(BaseHandler):
         output_df = self.process(input_table)
         return self._file_storage.write_df(user_input.get('path_out'), output_df)
 
-    @abstractmethod
     def process(self, table: pa.Table) -> pd.DataFrame:
-        """Override with a transformation from a pyarrow Table (read from input parquet file) into a pandas DataFrame.
+        """Transform the pyarrow table into a pandas DataFrame.
+        The Table is read from the input parquet file stored at the `path_in` location passed in the `handle()` method.
 
         :param table: the input pyarrow Table.
         :return: the resulting DataFrame.
         """
-        raise NotImplementedError
+        return table.to_pandas()
