@@ -34,7 +34,8 @@ class TrainModelsHandler(BaseHandler):
         :return: the remote storage path of the DataFrame.
         """
         input_df = self._file_storage.read_df(user_input.get('path_in'))
-        self._file_storage.write_models(user_input.get('path_models_out'), self.process(input_df))
+        models = self.process(input_df)
+        self._file_storage.write_models(user_input.get('path_models_out'), models)
         return self._file_storage.write_df(user_input.get('path_out'), input_df)
 
     @abstractmethod
