@@ -5,10 +5,10 @@ import pandas as pd
 
 from .base_handler import BaseHandler
 from pricecypher.enums import AccessTokenGrantType
-from pricecypher.dataclasses import Models
+from pricecypher.contracts import PricecypherModel
 
 
-class TrainModelsHandler(BaseHandler):
+class TrainModelHandler(BaseHandler):
     """The abstract TrainModelHandler class provides a base for storing one or more models trained on a pandas
     DataFrame.
     Extend this class and override the `process()` method when you want to receive a DataFrame and train one or more
@@ -39,10 +39,10 @@ class TrainModelsHandler(BaseHandler):
         return self._file_storage.write_df(user_input.get('path_out'), input_df)
 
     @abstractmethod
-    def process(self, df: pd.DataFrame) -> Models:
-        """Override to implement and train one or more models on the input DataFrame.
+    def train(self, df: pd.DataFrame) -> PricecypherModel:
+        """Override to implement and train a model (wrapper) on the given input DataFrame.
 
         :param df: the input DataFrame.
-        :return: the resulting Models.
+        :return: the trained model instance.
         """
         raise NotImplementedError
