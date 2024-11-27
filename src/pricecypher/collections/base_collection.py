@@ -33,5 +33,5 @@ class Collection(Sequence[T], metaclass=ABCMeta):
         return [getattr(v, prop) for v in self._list]
 
     def where(self, prop, value) -> 'Collection[T]':
-        filtered = filter(lambda v: getattr(v, prop) == value, self._list)
+        filtered = [v for v in self._list if getattr(v, prop) == value]
         return type(self)(filtered)

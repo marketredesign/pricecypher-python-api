@@ -139,24 +139,6 @@ class FileStorage(ABC):
             remote_storage_settings=settings.remote_storage_settings,
         )
 
-    def read_string(self, path: str) -> str:
-        """Read the contents of a file at the given path as string.
-        :param path: the path to read from.
-        :return: the file contents.
-        """
-        with self.load(path, mode='r') as f:
-            return f.read()
-
-    def write_string(self, path: str, string: str) -> str:
-        """Write a string to a file.
-        :param path: the path to write the file to.
-        :param string: the string to write to the file.
-        :return: the remote storage path.
-        """
-        with self.save(path, mode='w') as f:
-            f.write(string)
-        return self.get_path_remote(path)
-
     def read_df(self, path: str) -> pd.DataFrame:
         """Read a DataFrame pickle from the file at the given path.
         :param path: the path to read from.
@@ -164,6 +146,22 @@ class FileStorage(ABC):
         """
         with self.load(path, mode='rb') as f:
             return pd.read_pickle(f)
+
+    def read_parquet(self, path: str) -> pa.Table:
+        """Read a parquet file from the file at the given path.
+        :param path: the path to read from.
+        :return: the DataFrame.
+        """
+        with self.load(path, mode='rb') as f:
+            return pq.read_table(f)
+
+    def read_string(self, path: str) -> str:
+        """Read the contents of a file at the given path as string.
+        :param path: the path to read from.
+        :return: the file contents.
+        """
+        with self.load(path, mode='r') as f:
+            return f.read()
 
     def write_df(self, path: str, df: pd.DataFrame) -> str:
         """Write a DataFrame to a pickle.
@@ -175,13 +173,14 @@ class FileStorage(ABC):
             pd.to_pickle(df, f)
         return self.get_path_remote(path)
 
-    def read_parquet(self, path: str) -> pa.Table:
-        """Read a parquet file from the file at the given path.
-        :param path: the path to read from.
-        :return: the DataFrame.
+    def write_metadata(self, path: str, metadata: JsonSerializable) -> str:
+        """Serializes metadata to JSON and stores in a file at the given path.
+        :param path: the path to store the metadata to.
+        :param metadata: should be serializable by PriceCypherJsonEncoder.
+        :return: the remote storage path.
         """
-        with self.load(path, mode='rb') as f:
-            return pq.read_table(f)
+        json_metadata = json.dumps(metadata, cls=PriceCypherJsonEncoder)
+        return self.write_string(path, json_metadata)
 
     def write_parquet(self, path: str, table: pa.Table) -> str:
         """Write a parquet file.
@@ -193,11 +192,12 @@ class FileStorage(ABC):
             pq.write_table(table, f)
         return self.get_path_remote(path)
 
-    def write_metadata(self, path: str, metadata: JsonSerializable) -> str:
-        """Serializes metadata to JSON and stores in a file at the given path.
-        :param path: the path to store the metadata to.
-        :param metadata: should be serializable by PriceCypherJsonEncoder.
+    def write_string(self, path: str, string: str) -> str:
+        """Write a string to a file.
+        :param path: the path to write the file to.
+        :param string: the string to write to the file.
         :return: the remote storage path.
         """
-        json_metadata = json.dumps(metadata, cls=PriceCypherJsonEncoder)
-        return self.write_string(path, json_metadata)
+        with self.save(path, mode='w') as f:
+            f.write(string)
+        return self.get_path_remote(path)

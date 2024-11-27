@@ -68,7 +68,7 @@ class Datasets(object):
         :param dataset_id: Dataset to get metadata for.
         :rtype: Dataset
         """
-        return next((d for d in self.index() if d.id == dataset_id), None)
+        return next((d for d in self.index() if d and d.id == dataset_id), None)
 
     def get_scopes(self, dataset_id, bc_id='all', intake_status=None, environment=None):
         """Get all scopes for the given dataset.
