@@ -26,15 +26,15 @@ class BatchInferenceHandler(BaseHandler):
 
     def handle(self, user_input: dict[str, Any]) -> any:
         """Handle the given `user_input`.
-        Needs a Models pickle stored at `path_models_in` and a pandas DataFrame stored as a pickle at `path_in`.
+        Needs a model tracked by mlflow, referenced by `model_uri_in`, and a pandas DataFrame pickle at `path_in`.
         The output pandas DataFrame will be stored as a pickle at the `path_out` location.
 
-        :param user_input: requires `path_in`, `path_models_in`, and `path_out`.
+        :param user_input: requires `path_in`, `model_uri_in`, and `path_out`.
         :return: the remote storage path.
         :raise RuntimeError: when the number of rows of the output is not equal to the input.
         """
         input_df = self._file_storage.read_df(user_input.get('path_in'))
-        self._model = mlflow.pyfunc.load_model(user_input.get('path_models_in'))
+        self._model = mlflow.pyfunc.load_model(user_input.get('model_uri_in'))
         num_rows_input = input_df.shape[0]
         output_df = self.process(input_df)
         self._guard_num_rows(output_df, num_rows_input)

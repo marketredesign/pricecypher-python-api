@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Any
 
+import mlflow.pyfunc
 import pandas as pd
 
 from .base_handler import BaseHandler
@@ -26,16 +27,17 @@ class TrainModelHandler(BaseHandler):
 
     def handle(self, user_input: dict[str, Any]) -> any:
         """Handle the given `user_input`.
-        Needs a pandas DataFrame stored as a pickle at the `path_in` location. The output dict will be stored at the
-        `path_models_out` location as a pickle. For consistency the (unaltered) input DataFrame is stored at `path_out`
+        Needs a pandas DataFrame stored as a pickle at the `path_in` location. The trained model will be stored at the
+        `path_model_out` location by mlflow. For consistency the (unaltered) input DataFrame is stored at `path_out`
         as well.
 
-        :param user_input: requires `path_in`, `path_out` and `path_models_out`.
+        :param user_input: requires `path_in`, `path_out` and `path_model_out`.
         :return: the remote storage path of the DataFrame.
         """
         input_df = self._file_storage.read_df(user_input.get('path_in'))
-        models = self.process(input_df)
-        self._file_storage.write_models(user_input.get('path_models_out'), models)
+        model = self.train(input_df)
+
+        mlflow.pyfunc.save_model(user_input.get('path_model_out'), python_model=model)
         return self._file_storage.write_df(user_input.get('path_out'), input_df)
 
     @abstractmethod
