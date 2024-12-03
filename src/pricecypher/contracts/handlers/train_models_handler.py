@@ -6,7 +6,7 @@ import pandas as pd
 
 from .base_handler import BaseHandler
 from pricecypher.enums import AccessTokenGrantType
-from pricecypher.contracts import PricecypherModel
+from ..pricecypher_model import PricecypherModel
 
 
 class TrainModelHandler(BaseHandler):
