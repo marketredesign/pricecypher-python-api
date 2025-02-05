@@ -63,6 +63,7 @@ class _ScopesEndpoint(BaseEndpoint):
     def __init__(self, client, base):
         self.client = client
         self.base_url = base
+        self.param_keys = {'intake_status', 'environment'}
 
     def index(self, **kwargs):
         """
